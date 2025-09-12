@@ -1,110 +1,139 @@
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import * as React from "react"
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
+type PaginationProps = {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+  className?: string
+  maxPagesDisplayed?: number // opcional, padrão 5
 }
 
-const Pagination = ({ 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  hasNextPage, 
-  hasPreviousPage 
+export const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  hasNextPage,
+  hasPreviousPage,
+  className,
+  maxPagesDisplayed = 5,
 }: PaginationProps) => {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) return null
 
-  const getVisiblePages = () => {
-    const delta = 2;
-    const start = Math.max(1, currentPage - delta);
-    const end = Math.min(totalPages, currentPage + delta);
-    
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+  const pages: (number | "ellipsis")[] = []
 
-  const handlePageChange = (page: number) => {
-    onPageChange(page);
-    // Scroll to top smoothly on page change
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-  };
+  // Calcula intervalo de páginas visíveis
+  let startPage = Math.max(currentPage - Math.floor(maxPagesDisplayed / 2), 1)
+  let endPage = startPage + maxPagesDisplayed - 1
 
-  const visiblePages = getVisiblePages();
+  if (endPage > totalPages) {
+    endPage = totalPages
+    startPage = Math.max(endPage - maxPagesDisplayed + 1, 1)
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i)
+  }
+
+  // Adiciona ellipsis se necessário
+  if (startPage > 1) pages.unshift("ellipsis")
+  if (endPage < totalPages) pages.push("ellipsis")
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mt-8 px-4">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handlePageChange(currentPage - 1)}
+    <nav className={cn("flex justify-center gap-1", className)} aria-label="Pagination Navigation">
+      <PaginationPrevious
+        onClick={() => hasPreviousPage && onPageChange(currentPage - 1)}
         disabled={!hasPreviousPage}
-        className="h-10 w-10 sm:h-11 sm:w-11 p-0 touch-manipulation"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </Button>
-
-      {visiblePages[0] > 1 && (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(1)}
-            className="h-10 min-w-[40px] sm:h-11 sm:min-w-[44px] touch-manipulation"
+      />
+      {pages.map((page, index) =>
+        page === "ellipsis" ? (
+          <PaginationEllipsis key={`ellipsis-${index}`} />
+        ) : (
+          <PaginationLink
+            key={page}
+            isActive={page === currentPage}
+            onClick={() => onPageChange(page)}
           >
-            1
-          </Button>
-          {visiblePages[0] > 2 && (
-            <span className="px-2 text-muted-foreground">...</span>
-          )}
-        </>
+            {page}
+          </PaginationLink>
+        )
       )}
-
-      {visiblePages.map(page => (
-        <Button
-          key={page}
-          variant={page === currentPage ? "default" : "outline"}
-          size="sm"
-          onClick={() => handlePageChange(page)}
-          className="h-10 min-w-[40px] sm:h-11 sm:min-w-[44px] touch-manipulation"
-        >
-          {page}
-        </Button>
-      ))}
-
-      {visiblePages[visiblePages.length - 1] < totalPages && (
-        <>
-          {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
-            <span className="px-2 text-muted-foreground">...</span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(totalPages)}
-            className="h-10 min-w-[40px] sm:h-11 sm:min-w-[44px] touch-manipulation"
-          >
-            {totalPages}
-          </Button>
-        </>
-      )}
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => handlePageChange(currentPage + 1)}
+      <PaginationNext
+        onClick={() => hasNextPage && onPageChange(currentPage + 1)}
         disabled={!hasNextPage}
-        className="h-10 w-10 sm:h-11 sm:w-11 p-0 touch-manipulation"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </Button>
-    </div>
-  );
-};
+      />
+    </nav>
+  )
+}
 
-export default Pagination;
+// Componentes de UI reutilizáveis
+const PaginationLink = ({
+  className,
+  isActive,
+  size = "icon",
+  ...props
+}: { isActive?: boolean } & Pick<ButtonProps, "size"> & React.ComponentProps<"button">) => (
+  <button
+    aria-current={isActive ? "page" : undefined}
+    className={cn(
+      buttonVariants({
+        variant: isActive ? "outline" : "ghost",
+        size,
+      }),
+      className
+    )}
+    {...props}
+  />
+)
+PaginationLink.displayName = "PaginationLink"
+
+const PaginationPrevious = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof PaginationLink>) => (
+  <PaginationLink
+    aria-label="Go to previous page"
+    size="default"
+    className={cn("gap-1 pl-2.5", className)}
+    {...props}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span>Previous</span>
+  </PaginationLink>
+)
+PaginationPrevious.displayName = "PaginationPrevious"
+
+const PaginationNext = ({
+  className,
+  ...props
+}: React.ComponentProps<typeof PaginationLink>) => (
+  <PaginationLink
+    aria-label="Go to next page"
+    size="default"
+    className={cn("gap-1 pr-2.5", className)}
+    {...props}
+  >
+    <span>Next</span>
+    <ChevronRight className="h-4 w-4" />
+  </PaginationLink>
+)
+PaginationNext.displayName = "PaginationNext"
+
+const PaginationEllipsis = ({
+  className,
+  ...props
+}: React.ComponentProps<"span">) => (
+  <span
+    aria-hidden
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </span>
+)
+PaginationEllipsis.displayName = "PaginationEllipsis"

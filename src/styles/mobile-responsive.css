@@ -52,6 +52,43 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
+/* Modal responsiveness improvements */
+@media (max-width: 640px) {
+  /* Ensure modals are properly sized on mobile */
+  [data-radix-dialog-content] {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+    margin: 0.5rem !important;
+  }
+  
+  /* Improve touch targets for modal buttons */
+  [data-radix-dialog-content] button {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+  
+  /* Improve form inputs in modals */
+  [data-radix-dialog-content] input,
+  [data-radix-dialog-content] textarea,
+  [data-radix-dialog-content] select {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    min-height: 44px !important;
+  }
+  
+  /* Ensure modal text is readable */
+  [data-radix-dialog-content] {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Improve modal overlay on mobile */
+  [data-radix-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+}
+
 /* Prevent grid/flex items from causing overflow */
 .grid-responsive {
   min-width: 0;

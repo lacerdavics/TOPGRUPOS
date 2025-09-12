@@ -7,11 +7,7 @@ import { ExternalLink, Eye, Flag, ArrowLeft, Trash2, Ban } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkIsAdmin } from "@/services/userService";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { ConfirmationModal } from "@/components/ConfirmationModal";
-import { ReportModal } from "@/components/ReportModal";
 
 interface Group {
   id: string;
@@ -30,10 +26,6 @@ const GroupDescription: React.FC = () => {
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
   const { currentUser } = useAuth();
 
   useEffect(() => {
@@ -74,43 +66,17 @@ const GroupDescription: React.FC = () => {
   }, [currentUser?.uid]);
 
   const handleProceed = () => group && window.open(group.telegramUrl, '_blank');
-  const handleReportClick = () => setShowReportModal(true);
-
-  const handleDeleteGroup = async () => {
-    if (!group?.id) return;
-    setActionLoading(true);
-    try {
-      await deleteDoc(doc(db, "groups", group.id));
-      toast.success("Grupo apagado com sucesso!");
-      navigate(-1);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao apagar grupo. Tente novamente.");
-    } finally {
-      setActionLoading(false);
-      setShowDeleteConfirm(false);
-    }
+  
+  const handleDeleteClick = () => {
+    navigate(`/grupo/${group?.id}/apagar?name=${encodeURIComponent(group?.name || '')}`);
   };
 
-  const handleSuspendGroup = async () => {
-    if (!group?.id) return;
-    setActionLoading(true);
-    try {
-      await updateDoc(doc(db, "groups", group.id), {
-        approved: false,
-        suspended: true,
-        suspendedAt: new Date(),
-        suspendedBy: currentUser?.uid
-      });
-      toast.success("Grupo suspenso com sucesso!");
-      navigate(-1);
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao suspender grupo. Tente novamente.");
-    } finally {
-      setActionLoading(false);
-      setShowSuspendConfirm(false);
-    }
+  const handleSuspendClick = () => {
+    navigate(`/grupo/${group?.id}/suspender?name=${encodeURIComponent(group?.name || '')}`);
+  };
+
+  const handleReportClick = () => {
+    navigate(`/grupo/${group?.id}/denunciar?name=${encodeURIComponent(group?.name || '')}`);
   };
 
   const decodeHtml = (html: string) =>
@@ -188,18 +154,16 @@ const GroupDescription: React.FC = () => {
                 <>
                   <Button
                     variant="outline"
-                    onClick={() => setShowDeleteConfirm(true)}
+                    onClick={handleDeleteClick}
                     className="w-full sm:w-auto gap-2 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
-                    disabled={actionLoading}
                   >
                     <Trash2 className="h-4 w-4" />
                     Apagar
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setShowSuspendConfirm(true)}
+                    onClick={handleSuspendClick}
                     className="w-full sm:w-auto gap-2 border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20"
-                    disabled={actionLoading}
                   >
                     <Ban className="h-4 w-4" />
                     Suspender
@@ -224,36 +188,6 @@ const GroupDescription: React.FC = () => {
           </div>
         </div>
 
-        <ConfirmationModal
-          isOpen={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={handleDeleteGroup}
-          title="Confirmar Exclusão"
-          description={`Tem certeza que deseja apagar permanentemente o grupo "${group?.name}"? Esta ação não pode ser desfeita.`}
-          confirmText="Apagar Grupo"
-          cancelText="Cancelar"
-          variant="destructive"
-          isLoading={actionLoading}
-        />
-
-        <ConfirmationModal
-          isOpen={showSuspendConfirm}
-          onClose={() => setShowSuspendConfirm(false)}
-          onConfirm={handleSuspendGroup}
-          title="Confirmar Suspensão"
-          description={`Tem certeza que deseja suspender o grupo "${group?.name}"? Ele será removido da plataforma, mas não será deletado permanentemente.`}
-          confirmText="Suspender Grupo"
-          cancelText="Cancelar"
-          variant="destructive"
-          isLoading={actionLoading}
-        />
-
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
-          groupId={group.id}
-          groupName={group.name}
-        />
       </main>
 
       <Footer />

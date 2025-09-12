@@ -90,7 +90,7 @@ const PromotionCard = ({ plan, onSelect, savings }: PromotionCardProps) => {
         <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">R$ {plan.price}</div>
 
         {/* Tempo destacado sem o 0 */}
-        {plan.duration && plan.duration > 0 && (
+        {plan.duration !== undefined && plan.duration !== null && Number(plan.duration) > 0 && (
           <div className="my-2">
             <span className="text-3xl sm:text-4xl font-extrabold text-primary">{plan.duration}</span>
             <span className="ml-1 text-sm sm:text-base text-muted-foreground">dias de destaque</span>

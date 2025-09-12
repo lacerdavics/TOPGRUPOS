@@ -5,7 +5,7 @@ import { useOptimizedPopularGroups } from "@/hooks/useOptimizedPopularGroups";
 import { useUltraFastGroups } from "@/hooks/useUltraFastGroups";
 import GroupCard from "@/components/GroupCard";
 import usePageAnalytics from "@/hooks/usePageAnalytics";
-import Pagination from "@/components/Pagination";
+import { Pagination } from "@/components/Pagination"
 import { useState } from "react";
 import { ExpiredLinkNotifications } from "@/components/ExpiredLinkNotifications";
 

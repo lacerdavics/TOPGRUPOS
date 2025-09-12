@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GroupCard from "@/components/GroupCard";
 import { GroupWithStats } from "@/services/enhancedGroupService";
-import Pagination from "@/components/Pagination";
+import { Pagination } from "@/components/Pagination";
 import { getCategoryById } from "@/data/categories";
 import { getCategoryGroupsWithSections } from "@/services/enhancedGroupService";
 import { usePagination } from "@/hooks/usePagination";

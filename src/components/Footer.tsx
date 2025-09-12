@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+
 const logo = "/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png";
 
 const Footer = () => {

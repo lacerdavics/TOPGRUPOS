@@ -180,7 +180,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
+            "flex h-screen w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground fixed left-0 top-0 z-40",
             className
           )}
           ref={ref}
@@ -214,7 +214,7 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className="group peer hidden md:block text-sidebar-foreground"
+        className="group peer hidden md:block text-sidebar-foreground fixed left-0 top-0 h-screen z-40"
         data-state="expanded"
         data-collapsible=""
         data-variant={variant}
@@ -223,12 +223,12 @@ const Sidebar = React.forwardRef<
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
-            "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear"
+            "duration-200 relative h-screen w-[--sidebar-width] bg-transparent transition-[width] ease-linear"
           )}
         />
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
+            "duration-200 fixed inset-y-0 z-40 hidden h-screen w-[--sidebar-width] transition-[left,right,width] ease-linear md:flex",
             side === "left" ? "left-0" : "right-0",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"

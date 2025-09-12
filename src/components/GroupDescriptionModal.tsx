@@ -148,18 +148,14 @@ export const GroupDescriptionModal: React.FC<GroupDescriptionModalProps> = ({
           </div>
         </div>
 
-        {/* Report Modal */}
-        <ReportModal
-          isOpen={reportModalOpen}
-          onClose={() => setReportModalOpen(false)}
-          groupId={group.id}
-          groupName={group.name}
-          onSubmit={(reason) => {
-            console.log("Denúncia enviada:", reason, "para o grupo:", group.id);
-            setReportModalOpen(false);
-          }}
-        />
-      </DialogContent>
-    </Dialog>
-  );
-};
+        {reportModalOpen && (
+          <ReportModal
+            isOpen={reportModalOpen}
+            onClose={() => setReportModalOpen(false)}
+            onSubmit={(reason) => {
+              console.log("Denúncia enviada:", reason, "para o grupo:", group.id);
+              setReportModalOpen(false);
+            }}
+          />
+        )}
+

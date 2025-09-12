@@ -26,6 +26,9 @@ import ResetPassword from "./pages/ResetPassword";
 import Report from "./pages/Report";
 import Confirmation from "./pages/Confirmation";
 import Promover from "./pages/Promover";
+import DeleteGroup from "./pages/DeleteGroup";
+import SuspendGroup from "./pages/SuspendGroup";
+import ReportGroup from "./pages/ReportGroup";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -34,7 +37,7 @@ const AppContent = () => {
   const { isMobile, isTablet } = useResponsiveBreakpoints();
   
   return (
-    <SidebarProvider defaultOpen={!(isMobile || isTablet)}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         {/* Header with Sidebar Trigger - visible on mobile and tablet */}
         {(isMobile || isTablet) && (
@@ -49,7 +52,7 @@ const AppContent = () => {
         
         <AppSidebar />
         
-        <main className={`flex-1 ${(isMobile || isTablet) ? 'pt-16' : ''}`}>
+        <main className={`flex-1 ${(isMobile || isTablet) ? 'pt-16' : 'ml-60'}`}>
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -68,6 +71,9 @@ const AppContent = () => {
             <Route path="/report/:groupId" element={<Report />} />
             <Route path="/confirmation" element={<Confirmation />} />
             <Route path="/promover" element={<Promover />} />
+            <Route path="/grupo/:groupId/apagar" element={<DeleteGroup />} />
+            <Route path="/grupo/:groupId/suspender" element={<SuspendGroup />} />
+            <Route path="/grupo/:groupId/denunciar" element={<ReportGroup />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

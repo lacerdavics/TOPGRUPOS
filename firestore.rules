@@ -76,8 +76,9 @@ service cloud.firestore {
     
     // Regras para configurações administrativas
     match /admin_config/{configId} {
-      // Apenas administradores podem ler e escrever configurações
-      allow read, write: if isAdmin();
+      // Qualquer um pode ler configurações, apenas administradores podem escrever
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
     // Regras para analytics de visitas

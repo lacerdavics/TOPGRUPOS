@@ -63,45 +63,15 @@ class TelegramBatchService {
         try {
           console.log('🔍 Analyzing URL:', url);
           
-          // Retry mechanism with exponential backoff
-          let response: Response | null = null;
-          let lastError: Error | null = null;
-          const maxRetries = 3;
-          
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              console.log(`🔄 Attempt ${attempt}/${maxRetries} for URL:`, url);
-              
-              response = await fetch(this.API_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                },
-                body: JSON.stringify({ url: url }),
-                signal: AbortSignal.timeout(60000)
-              });
-              
-              // If successful, break out of retry loop
-              break;
-            } catch (error) {
-              lastError = error instanceof Error ? error : new Error('Unknown error');
-              console.warn(`⚠️ Attempt ${attempt} failed for ${url}:`, lastError.message);
-              
-              // If this was the last attempt, don't wait
-              if (attempt < maxRetries) {
-                // Exponential backoff: 1s, 2s, 4s
-                const backoffTime = Math.pow(2, attempt - 1) * 1000;
-                console.log(`⏳ Waiting ${backoffTime}ms before retry...`);
-                await new Promise(resolve => setTimeout(resolve, backoffTime));
-              }
-            }
-          }
-          
-          // If all retries failed, throw the last error
-          if (!response) {
-            throw lastError || new Error('All retry attempts failed');
-          }
+          const response = await fetch(this.API_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({ url: url }),
+            signal: AbortSignal.timeout(60000)
+          });
 
           if (!response.ok) {
             throw new Error(`API responded with status: ${response.status}`);

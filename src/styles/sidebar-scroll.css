@@ -1,0 +1,47 @@
+/* Global scroll fixes for sidebar */
+.sidebar-scroll-area {
+  overflow: auto !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  height: 100% !important;
+}
+
+.sidebar-categories {
+  overflow: visible !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  touch-action: pan-y !important;
+  max-height: none !important;
+}
+
+/* Force scroll on mobile and tablet only */
+@media (max-width: 1024px) {
+  .sidebar-scroll-area,
+  .sidebar-categories,
+  [data-scroll="true"] {
+    overflow: auto !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+    transform: translateZ(0) !important;
+    will-change: scroll-position !important;
+  }
+  
+  .sidebar-categories {
+    max-height: calc(100vh - 200px) !important;
+  }
+}
+
+/* Desktop specific - no scroll needed */
+@media (min-width: 1025px) {
+  .sidebar-categories {
+    overflow: visible !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+}

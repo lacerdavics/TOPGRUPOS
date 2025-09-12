@@ -1,0 +1,124 @@
+/* Optimized animations for mobile performance - DISABLED FOR ULTRA PERFORMANCE */
+
+/* Reduced motion animations */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* MOBILE PERFORMANCE: Disable animations but preserve scroll functionality */
+@media (max-width: 768px) {
+  /* Performance optimizations - keep essential functionality */
+  *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"]),
+  *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"])::before,
+  *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"])::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+    perspective: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* CRITICAL: Preserve scroll functionality */
+  .scroll-container,
+  .sidebar-scroll-area,
+  .overflow-x-auto,
+  .overflow-y-auto,
+  [data-scroll="true"],
+  .sidebar-categories {
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    scroll-behavior: auto !important;
+    touch-action: pan-y !important;
+    /* Force hardware acceleration for smooth scrolling */
+    transform: translateZ(0) !important;
+    will-change: scroll-position !important;
+  }
+  
+  /* Sidebar specific fixes */
+  .sidebar-scroll-area {
+    height: 100% !important;
+    max-height: none !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Keep minimal shadows only for cards */
+  .card-modern,
+  .stats-card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  }
+
+  /* Remove ALL hover effects on mobile */
+  .btn-glow:hover,
+  .hover-lift:hover,
+  .btn-hover-effect:hover,
+  .card-modern:hover,
+  .btn-modern:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+    scale: none !important;
+  }
+
+  /* Disable complex animations */
+  .animate-fade-in-up,
+  .animate-text-shimmer,
+  .counter {
+    animation: none !important;
+    background: hsl(var(--primary)) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+
+  /* Ultra fast scroll behavior */
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  /* Remove gradients for better performance */
+  .badge-glow,
+  .gradient-primary,
+  .gradient-accent {
+    background: hsl(var(--primary)) !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Performance optimizations */
+.search-input {
+  transition: box-shadow 0.2s ease;
+  contain: layout;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+/* Force scrolling to work on all devices including tablet */
+@media (max-width: 1024px) {
+  .sidebar-scroll-area,
+  .scroll-container,
+  [data-scroll="true"] {
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    scroll-behavior: smooth !important;
+    touch-action: manipulation !important;
+  }
+  
+  /* Ensure categories list is scrollable */
+  .sidebar-categories {
+    max-height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}

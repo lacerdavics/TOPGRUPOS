@@ -1,0 +1,64 @@
+/* Force toast visibility on mobile */
+[data-sonner-toaster] {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
+
+[data-radix-toast-viewport] {
+  z-index: 999999 !important;
+  position: fixed !important;
+  top: 20px !important;
+  left: 16px !important;
+  right: 16px !important;
+  pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column-reverse !important;
+  gap: 12px !important;
+}
+
+[data-state="open"][data-radix-toast-root] {
+  pointer-events: auto !important;
+  background-color: rgba(239, 68, 68, 0.95) !important;
+  color: white !important;
+  border: 2px solid rgba(239, 68, 68, 0.8) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  width: calc(100vw - 32px) !important;
+  max-width: none !important;
+  min-height: 60px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* Make sure it's above everything */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 999998;
+}
+
+/* Emergency fallback - show toast as alert if Radix fails */
+.toast-debug-fallback {
+  position: fixed !important;
+  top: 20px !important;
+  left: 16px !important;
+  right: 16px !important;
+  background: #dc2626 !important;
+  color: white !important;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  z-index: 999999 !important;
+  font-weight: bold !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+}

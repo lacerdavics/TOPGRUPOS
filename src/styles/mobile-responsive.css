@@ -1,0 +1,70 @@
+/* Mobile responsiveness utilities */
+.mobile-responsive {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll on all elements */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Ensure container elements don't exceed viewport */
+.container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Mobile-first responsive text */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.3 !important;
+  }
+  
+  h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.4 !important;
+  }
+  
+  .text-responsive {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Ensure buttons don't overflow */
+  .btn-responsive {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Safe area padding for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* Prevent grid/flex items from causing overflow */
+.grid-responsive {
+  min-width: 0;
+}
+
+.flex-responsive {
+  min-width: 0;
+}
+
+/* Mobile card adjustments */
+@media (max-width: 640px) {
+  .card-mobile {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+}

@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Optimized animations for mobile performance - DISABLED FOR ULTRA PERFORMANCE */
 
 /* Reduced motion animations */
@@ -11,7 +15,6 @@
 
 /* MOBILE PERFORMANCE: Disable animations but preserve scroll functionality */
 @media (max-width: 768px) {
-  /* Performance optimizations - keep essential functionality */
   *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"]),
   *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"])::before,
   *:not(.scroll-container):not(.sidebar-scroll-area):not([data-scroll="true"])::after {
@@ -25,8 +28,7 @@
     backdrop-filter: none !important;
     box-shadow: none !important;
   }
-  
-  /* CRITICAL: Preserve scroll functionality */
+
   .scroll-container,
   .sidebar-scroll-area,
   .overflow-x-auto,
@@ -38,12 +40,10 @@
     overscroll-behavior: contain !important;
     scroll-behavior: auto !important;
     touch-action: pan-y !important;
-    /* Force hardware acceleration for smooth scrolling */
     transform: translateZ(0) !important;
     will-change: scroll-position !important;
   }
-  
-  /* Sidebar specific fixes */
+
   .sidebar-scroll-area {
     height: 100% !important;
     max-height: none !important;
@@ -51,13 +51,11 @@
     overflow-x: hidden !important;
   }
 
-  /* Keep minimal shadows only for cards */
   .card-modern,
   .stats-card {
     box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
   }
 
-  /* Remove ALL hover effects on mobile */
   .btn-glow:hover,
   .hover-lift:hover,
   .btn-hover-effect:hover,
@@ -68,7 +66,6 @@
     scale: none !important;
   }
 
-  /* Disable complex animations */
   .animate-fade-in-up,
   .animate-text-shimmer,
   .counter {
@@ -79,12 +76,10 @@
     -webkit-text-fill-color: transparent !important;
   }
 
-  /* Ultra fast scroll behavior */
   html {
     scroll-behavior: auto !important;
   }
 
-  /* Remove gradients for better performance */
   .badge-glow,
   .gradient-primary,
   .gradient-accent {
@@ -93,7 +88,6 @@
   }
 }
 
-/* Performance optimizations */
 .search-input {
   transition: box-shadow 0.2s ease;
   contain: layout;
@@ -103,7 +97,6 @@
   box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
 }
 
-/* Force scrolling to work on all devices including tablet */
 @media (max-width: 1024px) {
   .sidebar-scroll-area,
   .scroll-container,
@@ -114,8 +107,7 @@
     scroll-behavior: smooth !important;
     touch-action: manipulation !important;
   }
-  
-  /* Ensure categories list is scrollable */
+
   .sidebar-categories {
     max-height: calc(100vh - 200px) !important;
     overflow-y: auto !important;

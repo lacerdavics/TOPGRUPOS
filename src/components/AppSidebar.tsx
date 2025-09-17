@@ -3,10 +3,13 @@ import { categories } from "@/data/categories";
 import { useResponsiveBreakpoints } from "@/hooks/useResponsiveBreakpoints";
 import CategoryIcon from "@/components/CategoryIcon";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, Home, User, Sun, Moon } from "lucide-react";
+import { Plus, LogOut, Home, User, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { resetSidebarState } from "@/utils/sidebarUtils";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { checkIsAdmin } from "@/services/userService";
+import { requiresAgeVerification, isAgeVerified } from "@/utils/ageVerification";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +23,8 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 const logo = "/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png";
 
@@ -30,9 +35,43 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
+  // Check admin status quando o usuário muda
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (currentUser?.uid) {
+        setCheckingAdmin(true);
+        try {
+          const adminStatus = await checkIsAdmin(currentUser.uid);
+          setIsAdmin(adminStatus);
+          // Armazena no sessionStorage para persistir durante a sessão
+          sessionStorage.setItem('isAdmin', adminStatus.toString());
+        } catch (error) {
+          console.error("Erro ao verificar status de admin:", error);
+          setIsAdmin(false);
+          sessionStorage.removeItem('isAdmin');
+        } finally {
+          setCheckingAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+        sessionStorage.removeItem('isAdmin');
+      }
+    };
+
+    checkAdminStatus();
+  }, [currentUser?.uid]);
+
+  // Recupera o status de admin do sessionStorage no carregamento inicial
+  useEffect(() => {
+    const savedAdminStatus = sessionStorage.getItem('isAdmin');
+    if (savedAdminStatus) {
+      setIsAdmin(savedAdminStatus === 'true');
+    }
+  }, []);
 
   // Reset sidebar state when breakpoint changes
   useEffect(() => {
@@ -42,9 +81,30 @@ export function AppSidebar() {
   const handleLogout = async () => {
     try {
       await logout();
+      sessionStorage.removeItem('isAdmin');
       navigate("/");
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
+    }
+  };
+
+  const handleAdminClick = () => {
+    navigate("/admin");
+    setDropdownOpen(false);
+  };
+
+  // Função para verificar admin status quando o dropdown é aberto
+  const handleDropdownOpen = async (open: boolean) => {
+    setDropdownOpen(open);
+    
+    if (open && currentUser?.uid && !checkingAdmin) {
+      try {
+        const adminStatus = await checkIsAdmin(currentUser.uid);
+        setIsAdmin(adminStatus);
+        sessionStorage.setItem('isAdmin', adminStatus.toString());
+      } catch (error) {
+        console.error("Erro ao verificar admin status:", error);
+      }
     }
   };
 
@@ -82,6 +142,44 @@ export function AppSidebar() {
       ? "bg-gradient-to-br from-primary/10 to-accent/10 border-primary/30 text-primary shadow-lg scale-105 ring-1 ring-primary/20"
       : "bg-gradient-to-br from-card via-muted/20 to-card hover:from-primary/5 hover:to-accent/5 hover:shadow-elegant hover:scale-105 hover:ring-1 hover:ring-primary/10 transition-all duration-300 border-border/50";
 
+  // Componente para o dropdown do usuário
+  const UserDropdown = () => (
+    <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback>
+              {currentUser?.email?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end">
+        <DropdownMenuItem>
+          <div className="flex flex-col">
+            <p className="text-sm font-medium">{currentUser?.email}</p>
+            <p className="text-xs text-muted-foreground">Usuário</p>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* Opção do Painel Admin no dropdown */}
+        {isAdmin && (
+          <>
+            <DropdownMenuItem onClick={handleAdminClick}>
+              <Settings className="mr-2 w-4 h-4" />
+              Painel Admin
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 w-4 h-4" />
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   // ---- MOBILE / TABLET ----
   if (isMobile || isTablet) {
     return (
@@ -89,8 +187,11 @@ export function AppSidebar() {
         collapsible="offcanvas"
         className="fixed inset-0 z-50 h-screen w-full max-w-xs bg-[#292723]"
       >
+        <VisuallyHidden>
+          <DialogTitle>Menu de navegação</DialogTitle>
+        </VisuallyHidden>
+
         <div className="flex flex-col h-screen">
-          {/* ===== Header fixo ===== */}
           <SidebarHeader className="flex-shrink-0 p-2 border-b border-border/30">
             <div className="flex items-center justify-between">
               <Link
@@ -106,37 +207,11 @@ export function AppSidebar() {
                 </h1>
               </Link>
               <div className="flex items-center gap-2">
-                {currentUser && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>
-                            {currentUser.email?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end">
-                      <DropdownMenuItem>
-                        <div className="flex flex-col">
-                          <p className="text-sm font-medium">{currentUser.email}</p>
-                          <p className="text-xs text-muted-foreground">Usuário</p>
-                        </div>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}>
-                        <LogOut className="mr-2 w-4 h-4" />
-                        Sair
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                {currentUser && <UserDropdown />}
               </div>
             </div>
           </SidebarHeader>
 
-          {/* ===== Botões de navegação fixos ===== */}
           <div className="flex-shrink-0 p-3 border-b border-border/30">
             <div className="flex flex-col gap-2">
               <Link
@@ -186,7 +261,6 @@ export function AppSidebar() {
             </div>
           </div>
 
-          {/* ===== Área ROLÁVEL das categorias ===== */}
           <div className="flex-1 overflow-hidden">
             <div className="h-full overflow-y-auto p-3" style={{ 
               WebkitOverflowScrolling: 'touch',
@@ -202,7 +276,11 @@ export function AppSidebar() {
                 {categories.map((cat) => (
                   <Link
                     key={cat.id}
-                    to={`/categoria/${cat.id}`}
+                    to={
+                      requiresAgeVerification(cat.id) && !isAgeVerified()
+                        ? `/verificacao-idade?redirect=${encodeURIComponent(`/categoria/${cat.id}`)}`
+                        : `/categoria/${cat.id}`
+                    }
                     onClick={() => setOpenMobile(false)}
                     className={`${getCardCls(isActive(cat.id))} flex items-center gap-2 p-2 rounded-xl`}
                   >
@@ -218,7 +296,6 @@ export function AppSidebar() {
             </div>
           </div>
 
-          {/* ===== Footer fixo ===== */}
           <div className="flex-shrink-0 p-3 border-t border-border/30 text-center text-xs text-muted-foreground">
             © 2024 TopGrupos
           </div>
@@ -230,7 +307,6 @@ export function AppSidebar() {
   // === DESKTOP SIDEBAR ===
   return (
     <Sidebar className={`h-full ${isCollapsed ? "w-12 bg-[#292723]" : "w-60 bg-[#292723]"} transition-all duration-300 ease-in-out border-r border-border/30 flex flex-col`} collapsible="icon">
-      {/* Header */}
       <SidebarHeader className="p-2 border-b border-border/30 flex-shrink-0">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 group">
@@ -246,41 +322,13 @@ export function AppSidebar() {
 
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              {currentUser && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 aspect-square shrink-0 hover:ring-2 hover:ring-primary/40">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-sm">{currentUser.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount sideOffset={8}>
-                    <DropdownMenuItem className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{currentUser.email}</p>
-                        <p className="text-xs leading-none text-muted-foreground">Usuário</p>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sair</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              {/* Theme toggle */}
-              <Button variant="ghost" onClick={toggleTheme} className="h-8 w-8 p-0 aspect-square">
-                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </Button>
+              {currentUser && <UserDropdown />}
+              <ThemeToggle />
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      {/* Navigation Buttons - Desktop */}
       {!isCollapsed && (
         <div className="flex-shrink-0 p-3 border-b border-border/30">
           <nav className="flex flex-col space-y-2">
@@ -327,7 +375,6 @@ export function AppSidebar() {
         </div>
       )}
 
-      {/* Scrollable Categories */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {!isCollapsed && (
           <>
@@ -343,12 +390,20 @@ export function AppSidebar() {
                 {categories.map((category) => (
                   <Link 
                     key={category.id} 
-                    to={`/categoria/${category.id}`} 
+                    to={
+                      requiresAgeVerification(category.id) && !isAgeVerified()
+                        ? `/verificacao-idade?redirect=${encodeURIComponent(`/categoria/${category.id}`)}`
+                        : `/categoria/${category.id}`
+                    }
                     className={`${getCardCls(isActive(category.id))} rounded-xl border backdrop-blur-sm flex flex-col items-center text-center justify-center group relative overflow-hidden transition-all duration-300 p-1.5 min-h-[60px]`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/2 to-accent/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="relative z-10 flex-shrink-0">
-                      <CategoryIcon iconData={category.icon} size={20} className={`transition-all duration-300 group-hover:scale-110 ${getIconColor(category.id, isActive(category.id))}`} />
+                      <CategoryIcon 
+                        iconData={category.icon} 
+                        size={20} 
+                        className={`transition-all duration-300 group-hover:scale-110 ${getIconColor(category.id, isActive(category.id))}`} 
+                      />
                     </div>
                     <div className="relative z-10">
                       <span className="font-semibold leading-tight block group-hover:text-primary transition-colors duration-300 text-xs">{category.name}</span>
@@ -360,9 +415,8 @@ export function AppSidebar() {
           </>
         )}
 
-        {/* Footer */}
         <div className="flex-shrink-0 p-3 border-t border-border/20 text-center">
-          <p className="text-xs text-muted-foreground">© 2024 TopGrupos</p>
+          <p className="text-xs text-muted-foreground">© 2025 TopGrupos</p>
         </div>
       </div>
     </Sidebar>

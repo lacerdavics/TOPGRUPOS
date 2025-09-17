@@ -69,7 +69,7 @@ export const ExpiredLinkNotifications = () => {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <CardTitle className="text-base">Link do Telegram Expirado</CardTitle>
+                <CardTitle className="text-base">Aviso do Sistema Anterior</CardTitle>
               </div>
               <Button
                 variant="ghost"
@@ -84,12 +84,13 @@ export const ExpiredLinkNotifications = () => {
           </CardHeader>
           <CardContent className="pt-0">
             <CardDescription className="mb-3">
-              O grupo <strong>"{notification.groupName}"</strong> foi removido automaticamente porque 
-              o link do Telegram parece ter expirado ou é inválido.
+              O grupo <strong>"{notification.groupName}"</strong> foi sinalizado pelo sistema anterior 
+              de verificação que era muito restritivo. <strong>Esta verificação foi desabilitada</strong> 
+              e não afeta mais novos cadastros.
             </CardDescription>
             
             <div className="bg-card/80 rounded-lg p-3 mb-3 border border-border/50">
-              <p className="text-sm text-muted-foreground mb-1">Link que causou o problema:</p>
+              <p className="text-sm text-muted-foreground mb-1">Link que foi sinalizado:</p>
               <code className="text-xs bg-muted px-2 py-1 rounded break-all border border-border/50">
                 {notification.telegramUrl}
               </code>
@@ -98,7 +99,7 @@ export const ExpiredLinkNotifications = () => {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-3 w-3" />
               <span>
-                Detectado em {notification.createdAt.toLocaleDateString('pt-BR', {
+                Sinalizado em {notification.createdAt.toLocaleDateString('pt-BR', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric',
@@ -108,10 +109,10 @@ export const ExpiredLinkNotifications = () => {
               </span>
             </div>
             
-            <Alert className="mt-3 border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <Alert className="mt-3 border-green-200 bg-green-50 dark:bg-green-950/20">
               <AlertDescription className="text-sm">
-                <strong>O que fazer:</strong> Verifique se o link está correto e tente cadastrar o grupo novamente. 
-                Certifique-se de que o link do Telegram está ativo e público.
+                <strong>✅ Sistema Corrigido:</strong> A verificação excessivamente restritiva foi removida. 
+                Novos grupos não receberão mais estes avisos desnecessários. Você pode dispensar esta notificação.
               </AlertDescription>
             </Alert>
           </CardContent>

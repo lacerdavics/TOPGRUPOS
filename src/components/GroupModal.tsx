@@ -33,16 +33,19 @@ const GroupModal = ({ group, open, onOpenChange }: GroupModalProps) => {
             {/* Group Avatar */}
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
               {group.profileImage ? (
-                <LazyImage 
-                  src={group.profileImage} 
+                <IntelligentGroupImage
+                  fallbackImageUrl={group.profileImage || group.imageUrl}
+                  telegramUrl={group.telegramUrl}
+                  groupName={decodedName}
                   alt={decodedName}
                   className="w-full h-full object-cover"
-                  groupName={decodedName}
+                  priority={true}
+                  groupId={group.id}
                 />
               ) : (
-                <span className="text-2xl font-bold text-primary-foreground">
-                  {decodedName.charAt(0).toUpperCase()}
-                </span>
+                <div className="w-full h-full bg-gradient-to-br from-muted/50 to-muted/80 flex items-center justify-center">
+                  <div className="text-muted-foreground/60 text-xl font-bold">📷</div>
+                </div>
               )}
             </div>
 

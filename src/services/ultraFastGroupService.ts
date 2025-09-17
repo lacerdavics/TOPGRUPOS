@@ -123,8 +123,6 @@ export const getUltraFastPopularGroups = async (limit = 6): Promise<UltraFastGro
       const q = query(
         collection(db, "groups"),
         where("approved", "==", true),
-        where("suspended", "!=", true),
-        orderBy("suspended"),
         orderBy("viewCount", "desc"),
         firestoreLimit(20)
       );
@@ -140,11 +138,10 @@ export const getUltraFastPopularGroups = async (limit = 6): Promise<UltraFastGro
             description: data.description,
             telegramUrl: data.telegramUrl,
             category: data.category,
-            imageUrl: data.profileImage,
+            imageUrl: data.profileImage, // Manter compatibilidade
             viewCount: data.viewCount || Math.floor(Math.random() * 10000) + 1000,
             createdAt: data.createdAt?.toDate() || new Date(),
             approved: true,
-            suspended: false
           };
         });
 

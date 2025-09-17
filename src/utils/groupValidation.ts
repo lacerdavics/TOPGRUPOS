@@ -35,6 +35,58 @@ export const sanitizeGroupTitle = (title: string): string => {
   return sanitized;
 };
 
+// Unified function to check if a group image is real (not a generic placeholder)
+export const isGroupImageReal = (imageUrl?: string): boolean => {
+  if (!imageUrl) {
+    console.log(`❌ Imagem vazia/nula: ${imageUrl}`);
+    return false;
+  }
+  
+  console.log(`🔍 Analisando URL: ${imageUrl}`);
+  
+  // Accept telesco.pe images as real images (they are actual group photos)
+  if (imageUrl.includes('telesco.pe')) {
+    console.log(`✅ ACEITA (telesco.pe - imagem real do grupo): ${imageUrl}`);
+    return true;
+  }
+  
+  // Accept Firebase Storage images as real (they are uploaded images)
+  if (imageUrl.includes('firebasestorage.googleapis.com')) {
+    console.log(`✅ ACEITA (Firebase Storage - imagem real): ${imageUrl}`);
+    return true;
+  }
+  
+  // Accept other CDN images as real
+  if (imageUrl.includes('imgbb.com') || 
+      imageUrl.includes('cdn.') ||
+      (imageUrl.startsWith('http') && !imageUrl.includes('ui-avatars.com'))) {
+    console.log(`✅ ACEITA (CDN/URL externa - imagem real): ${imageUrl}`);
+    return true;
+  }
+  
+  // Exclude Telegram userpic API (generic profile images with initials)
+  if (imageUrl.includes('t.me/i/userpic')) {
+    console.log(`❌ Rejeitada (userpic): ${imageUrl}`);
+    return false;
+  }
+  
+  // Exclude data:image/svg+xml (generic SVG avatars with initials)
+  if (imageUrl.startsWith('data:image/svg+xml')) {
+    console.log(`❌ Rejeitada (SVG genérico): ${imageUrl.substring(0, 50)}...`);
+    return false;
+  }
+  
+  // Exclude ui-avatars.com (generic avatar service)
+  if (imageUrl.includes('ui-avatars.com')) {
+    console.log(`❌ Rejeitada (ui-avatars): ${imageUrl}`);
+    return false;
+  }
+  
+  // If it has any other URL format, consider it a real uploaded image
+  console.log(`✅ ACEITA como imagem real: ${imageUrl}`);
+  return true;
+};
+
 // Truncate title with better logic
 export const truncateTitle = (title: string, maxLength: number = 30): string => {
   const sanitized = sanitizeGroupTitle(title);
@@ -135,8 +187,9 @@ export const generateFallbackAvatar = (name: string, size: number = 800): string
     
     // Use a variety of colors for better visual distinction
     const colors = [
-      '3b82f6', '8b5cf6', 'f59e0b', 'ef4444', '10b981', 
-      '6366f1', 'f97316', 'ec4899', '06b6d4', '84cc16'
+      '0ea5e9', '8b5cf6', 'f59e0b', 'ef4444', '10b981', 
+      '6366f1', 'f97316', 'ec4899', '06b6d4', '84cc16',
+      '3b82f6', 'e11d48', '059669', 'dc2626', '7c3aed'
     ];
     
     const colorIndex = sanitizedName.length % colors.length;
@@ -151,11 +204,12 @@ export const generateFallbackAvatar = (name: string, size: number = 800): string
       encodedInitials = encodeURIComponent('?');
     }
     
-    return `https://ui-avatars.com/api/?name=${encodedInitials}&background=${backgroundColor}&color=ffffff&size=${size}&font-size=0.6&format=png&rounded=true&bold=true`;
+    // Use PNG format for better compatibility and add more styling
+    return `https://ui-avatars.com/api/?name=${encodedInitials}&background=${backgroundColor}&color=ffffff&size=${size}&font-size=0.5&format=png&rounded=true&bold=true&length=2`;
   } catch (error) {
     console.warn('Error generating fallback avatar:', error);
     // Return a completely safe fallback
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent('?')}&background=3b82f6&color=ffffff&size=${size}&font-size=0.6&format=png&rounded=true&bold=true`;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent('?')}&background=0ea5e9&color=ffffff&size=${size}&font-size=0.5&format=png&rounded=true&bold=true`;
   }
 };
 

@@ -199,6 +199,29 @@ const PaymentDisplay = ({
             </div>
           </div>
 
+          {/* Credit Card Payment Option */}
+          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <div className="text-center space-y-3">
+              <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                Prefere pagar com cartão de crédito?
+              </p>
+              <Button 
+                asChild
+                variant="outline"
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+              >
+                <a 
+                  href="https://wa.me/5531991482323?text=Gostaria%20de%20impulsionar%20meu%20grupo%2C%20quero%20usar%20cart%C3%A3o"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
+                >
+                  💳 Quero pagar com cartão de crédito
+                </a>
+              </Button>
+            </div>
+          </div>
+
           <Button 
             variant="outline" 
             onClick={onBack}

@@ -15,10 +15,11 @@ interface Group {
   description: string;
   link: string;
   category: string;
-  membersCount: number;
   createdAt: any;
   userId: string;
   imageUrl?: string;
+  telegramUrl?: string;
+  profileImage?: string; // Campo principal do Firestore onde a imagem é armazenada
 }
 
 const MeusGrupos = () => {
@@ -67,17 +68,34 @@ const MeusGrupos = () => {
       const snapshot = await getDocs(allGroupsQuery);
       console.log("📊 Total de documentos encontrados:", snapshot.size);
       
-      // Aplicar paginação no lado cliente
+      // Aplicar paginação no lado cliente com mapeamento correto de imagens
       const allGroups = snapshot.docs.map(doc => {
         const data = doc.data() as any;
+        console.log(`🔍 Mapeando grupo ${doc.id}:`, {
+          name: data.name,
+          profileImage: data.profileImage,
+          imageUrl: data.imageUrl,
+          telegramUrl: data.telegramUrl
+        });
         return {
           id: doc.id,
-          ...data
+          ...data,
+          imageUrl: data.profileImage || data.imageUrl, // Garante que imageUrl receba profileImage
+          profileImage: data.profileImage, // Mantém profileImage explicitamente
+          telegramUrl: data.telegramUrl || data.link // Garante que telegramUrl esteja disponível
         } as Group;
       });
       
       const paginatedGroups = allGroups.slice(offset, offset + GROUPS_PER_PAGE);
       const hasMore = offset + GROUPS_PER_PAGE < allGroups.length;
+      
+      console.log(`✅ Grupos mapeados para página ${page}:`, paginatedGroups.map(g => ({
+        id: g.id,
+        name: g.name,
+        hasImageUrl: !!g.imageUrl,
+        hasProfileImage: !!g.profileImage,
+        hasTelegramUrl: !!g.telegramUrl
+      })));
       
       setGroups(paginatedGroups);
       setCurrentPage(page);

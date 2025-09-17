@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BatchUpload } from "@/components/BatchUpload";
+import CategoryIcon from "@/components/CategoryIcon";
 
 import { categories } from "@/data/categories";
 import { addGroup } from "@/services/groupService";
@@ -15,6 +16,7 @@ import { ArrowLeft, Send, ExternalLink, CheckCircle, Users, RefreshCw } from "lu
 import { Link, useNavigate } from "react-router-dom";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { telegramBatchService } from "@/services/telegramBatchService";
+import SEOHead from "@/components/SEOHead";
 import { imageUploadService } from "@/services/imageUploadService";
 
 const CadastrarGrupo = () => {
@@ -626,6 +628,13 @@ const CadastrarGrupo = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Cadastrar Grupo do Telegram Grátis | TopGrupos"
+        description="Cadastre seu grupo do Telegram gratuitamente na maior plataforma do Brasil. Alcance milhares de novos membros e faça sua comunidade crescer!"
+        keywords="cadastrar grupo telegram, divulgar grupo telegram, promover grupo telegram, crescer grupo telegram, telegram marketing, comunidades telegram"
+        url="https://topgrupostele.com.br/cadastrar"
+        canonical="https://topgrupostele.com.br/cadastrar"
+      />
       
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
           <div className="max-w-2xl mx-auto">
@@ -645,11 +654,11 @@ const CadastrarGrupo = () => {
               </Link>
             </Button>
             
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-              Cadastrar <span className="text-primary">Grupo</span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+              Cadastrar Grupo do <span className="text-primary">Telegram</span> Grátis
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Adicione seu grupo do Telegram à nossa plataforma e alcance mais pessoas
+              Adicione seu grupo do Telegram à maior plataforma do Brasil e alcance milhares de novos membros
             </p>
           </div>
 
@@ -815,13 +824,21 @@ const CadastrarGrupo = () => {
                     Categoria *
                   </Label>
                   <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
-                    <SelectTrigger className="bg-muted/50 h-11 sm:h-12">
+                    <SelectTrigger className="bg-muted/50 h-12 text-base">
                       <SelectValue placeholder="Selecione uma categoria" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[60vh] overflow-y-auto">
                       {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
+                        <SelectItem key={category.id} value={category.id} className="text-base py-3">
+                          <div className="flex items-center gap-3 w-full">
+                            <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${category.color} flex items-center justify-center flex-shrink-0`}>
+                              <CategoryIcon iconData={category.icon} size={14} color="white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium">{category.name}</div>
+                              <div className="text-xs text-muted-foreground truncate">{category.description}</div>
+                            </div>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -3,11 +3,11 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LazyImage from "@/components/LazyImage";
-import { ExternalLink, Eye, Flag, ArrowLeft, Trash2, Ban } from "lucide-react";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
+import { ExternalLink, Eye, Flag, ArrowLeft, Trash2, Ban, RefreshCw } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkIsAdmin } from "@/services/userService";
-import { toast } from "sonner";
 
 interface Group {
   id: string;
@@ -79,6 +79,10 @@ const GroupDescription: React.FC = () => {
     navigate(`/grupo/${group?.id}/denunciar?name=${encodeURIComponent(group?.name || '')}`);
   };
 
+  const handleRecategorizeClick = () => {
+    navigate(`/grupo/${group?.id}/recategorizar?name=${encodeURIComponent(group?.name || '')}&category=${encodeURIComponent(group?.category || '')}`);
+  };
+
   const decodeHtml = (html: string) =>
     html?.replace(/&#39;/g, "'")
         .replace(/&#33;/g, "!")
@@ -121,6 +125,7 @@ const GroupDescription: React.FC = () => {
               <h1 className="text-xl sm:text-3xl font-bold leading-tight">{decodeHtml(group.name)}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-3">
                 <Badge variant="secondary">{group.category}</Badge>
+                    groupId={group.id}
                 {group.viewCount && (
                   <span className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Eye className="h-4 w-4" />
@@ -132,7 +137,15 @@ const GroupDescription: React.FC = () => {
 
             {group.imageUrl && (
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                <LazyImage src={group.imageUrl} alt={group.name} className="w-full h-full object-cover" priority />
+                <IntelligentGroupImage
+                  fallbackImageUrl={group.imageUrl || (group as any).profileImage}
+                  telegramUrl={group.telegramUrl}
+                  groupName={group.name}
+                  alt={group.name}
+                  className="w-full h-full object-cover"
+                  priority={true}
+                  groupId={group.id}
+                />
               </div>
             )}
 
@@ -152,6 +165,14 @@ const GroupDescription: React.FC = () => {
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-end">
               {isAdmin && (
                 <>
+                  <Button
+                    variant="outline"
+                    onClick={handleRecategorizeClick}
+                    className="w-full sm:w-auto gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Recategorizar
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={handleDeleteClick}
@@ -187,6 +208,7 @@ const GroupDescription: React.FC = () => {
             </div>
           </div>
         </div>
+
 
       </main>
 

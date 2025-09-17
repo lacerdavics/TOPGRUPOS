@@ -7,6 +7,7 @@ interface Group {
   category: string;
   membersCount?: number;
   imageUrl?: string;
+  telegramUrl?: string;
 }
 
 interface UserGroupsGridProps {

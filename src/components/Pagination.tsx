@@ -11,6 +11,7 @@ type PaginationProps = {
   hasPreviousPage: boolean
   className?: string
   maxPagesDisplayed?: number // opcional, padrão 5
+  compact?: boolean // para mobile
 }
 
 export const Pagination = ({
@@ -21,18 +22,22 @@ export const Pagination = ({
   hasPreviousPage,
   className,
   maxPagesDisplayed = 5,
+  compact = false,
 }: PaginationProps) => {
   if (totalPages <= 1) return null
+
+  // Reduzir páginas mostradas no mobile
+  const effectiveMaxPages = compact ? 3 : maxPagesDisplayed;
 
   const pages: (number | "ellipsis")[] = []
 
   // Calcula intervalo de páginas visíveis
-  let startPage = Math.max(currentPage - Math.floor(maxPagesDisplayed / 2), 1)
-  let endPage = startPage + maxPagesDisplayed - 1
+  let startPage = Math.max(currentPage - Math.floor(effectiveMaxPages / 2), 1)
+  let endPage = startPage + effectiveMaxPages - 1
 
   if (endPage > totalPages) {
     endPage = totalPages
-    startPage = Math.max(endPage - maxPagesDisplayed + 1, 1)
+    startPage = Math.max(endPage - effectiveMaxPages + 1, 1)
   }
 
   for (let i = startPage; i <= endPage; i++) {
@@ -44,10 +49,11 @@ export const Pagination = ({
   if (endPage < totalPages) pages.push("ellipsis")
 
   return (
-    <nav className={cn("flex justify-center gap-1", className)} aria-label="Pagination Navigation">
+    <nav className={cn("flex justify-center items-center gap-1 sm:gap-2", className)} aria-label="Pagination Navigation">
       <PaginationPrevious
         onClick={() => hasPreviousPage && onPageChange(currentPage - 1)}
         disabled={!hasPreviousPage}
+        compact={compact}
       />
       {pages.map((page, index) =>
         page === "ellipsis" ? (
@@ -57,6 +63,7 @@ export const Pagination = ({
             key={page}
             isActive={page === currentPage}
             onClick={() => onPageChange(page)}
+            compact={compact}
           >
             {page}
           </PaginationLink>
@@ -65,6 +72,7 @@ export const Pagination = ({
       <PaginationNext
         onClick={() => hasNextPage && onPageChange(currentPage + 1)}
         disabled={!hasNextPage}
+        compact={compact}
       />
     </nav>
   )
@@ -75,15 +83,17 @@ const PaginationLink = ({
   className,
   isActive,
   size = "icon",
+  compact,
   ...props
-}: { isActive?: boolean } & Pick<ButtonProps, "size"> & React.ComponentProps<"button">) => (
+}: { isActive?: boolean; compact?: boolean } & Pick<ButtonProps, "size"> & React.ComponentProps<"button">) => (
   <button
     aria-current={isActive ? "page" : undefined}
     className={cn(
       buttonVariants({
         variant: isActive ? "outline" : "ghost",
-        size,
+        size: compact ? "sm" : size,
       }),
+      compact ? "h-8 w-8 text-xs sm:h-9 sm:w-9 sm:text-sm" : "",
       className
     )}
     {...props}
@@ -93,31 +103,39 @@ PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = ({
   className,
+  compact,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to previous page"
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    aria-label="Ir para página anterior"
+    size={compact ? "sm" : "default"}
+    className={cn(
+      compact ? "gap-1 px-2 h-8 text-xs sm:h-10 sm:px-3 sm:text-sm" : "gap-1 pl-2.5",
+      className
+    )}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
+    <span className={compact ? "hidden sm:inline" : ""}>Anterior</span>
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
+  compact,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to next page"
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    aria-label="Ir para próxima página"
+    size={compact ? "sm" : "default"}
+    className={cn(
+      compact ? "gap-1 px-2 h-8 text-xs sm:h-10 sm:px-3 sm:text-sm" : "gap-1 pr-2.5",
+      className
+    )}
     {...props}
   >
-    <span>Next</span>
+    <span className={compact ? "hidden sm:inline" : ""}>Próxima</span>
     <ChevronRight className="h-4 w-4" />
   </PaginationLink>
 )
@@ -129,10 +147,10 @@ const PaginationEllipsis = ({
 }: React.ComponentProps<"span">) => (
   <span
     aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    className={cn("flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center", className)}
     {...props}
   >
-    <MoreHorizontal className="h-4 w-4" />
+    <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
     <span className="sr-only">More pages</span>
   </span>
 )

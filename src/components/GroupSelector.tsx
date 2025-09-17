@@ -17,7 +17,7 @@ interface GroupSelectorProps {
   selectedPlanId?: string;
 }
 
-const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorProps) => {
+const GroupSelector = ({ onGroupSelect, onBack }: GroupSelectorProps) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
@@ -37,7 +37,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
   }, [groups, searchTerm]);
 
   const fetchUserGroups = async () => {
-    // Se não estiver logado, evite spinner infinito e informe o usuário
     if (!currentUser?.uid && !currentUser?.email) {
       setLoading(false);
       toast({
@@ -49,15 +48,12 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
 
     try {
       setLoading(true);
-
       const groupsRef = collection(db, "groups");
 
-      // Buscar por userId
       const qByUserId = currentUser?.uid
         ? query(groupsRef, where("userId", "==", currentUser.uid), where("approved", "==", true))
         : null;
 
-      // Buscar por userEmail (fallback)
       const qByEmail = currentUser?.email
         ? query(groupsRef, where("userEmail", "==", currentUser.email), where("approved", "==", true))
         : null;
@@ -84,8 +80,7 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
       const listUid = snapUid ? snapUid.docs.filter(d => !d.data().suspended).map(mapDocToGroup) : [];
       const listEmail = snapEmail ? snapEmail.docs.filter(d => !d.data().suspended).map(mapDocToGroup) : [];
 
-      // Mesclar e remover duplicados por id
-      const merged: Record<string, Group> = [...listUid, ...listEmail].reduce((acc: Record<string, Group>, g) => {
+      const merged: Record<string, Group> = [...listUid, ...listEmail].reduce((acc, g) => {
         acc[g.id] = g;
         return acc;
       }, {} as Record<string, Group>);
@@ -132,20 +127,15 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
   const startIndex = (currentPage - 1) * groupsPerPage;
   const currentGroups = filteredGroups.slice(startIndex, startIndex + groupsPerPage);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleGroupSelect = (group: Group) => {
-    onGroupSelect(group);
-  };
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handleGroupSelect = (group: Group) => onGroupSelect(group);
 
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando seus grupos...</p>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -155,8 +145,8 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Entre para ver seus grupos</h3>
-        <p className="text-muted-foreground mb-4">Você precisa estar logado para escolher um grupo para promover.</p>
+        <h3 className="text-lg font-semibold mb-2">Entre para continuar</h3>
+        <p className="text-muted-foreground mb-4">Você precisa estar logado para prosseguir.</p>
         <Link to="/auth">
           <Button size="lg">Fazer login</Button>
         </Link>
@@ -173,19 +163,23 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
           className="mb-4"
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
-          Voltar aos planos
+          Voltar
         </Button>
         
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Escolha seu grupo</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">Selecione qual grupo você deseja promover</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+          Escolha onde quer aplicar a promoção
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Clique em "Selecionar" para continuar
+        </p>
       </div>
 
-      {/* Search Box */}
+      {/* Search */}
       <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Pesquisar seus grupos..."
+            placeholder="Pesquisar..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -203,7 +197,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
               onClick={() => handleGroupSelect(group)}
             >
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-                {/* Group Image */}
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 bg-muted mx-auto sm:mx-0">
                   {group.profileImage ? (
                     <img 
@@ -218,7 +211,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
                   )}
                 </div>
 
-                {/* Group Info */}
                 <div className="flex-1 min-w-0 text-center sm:text-left">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-2 gap-1 sm:gap-0">
                     <h3 className="font-semibold text-base sm:text-lg truncate sm:pr-2">{group.name}</h3>
@@ -242,7 +234,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
                   </div>
                 </div>
 
-                {/* Select Button */}
                 <Button 
                   size="sm"
                   className="flex-shrink-0 w-full sm:w-auto mt-3 sm:mt-0"
@@ -261,12 +252,12 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
         <div className="text-center py-12">
           <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">
-            {searchTerm ? "Nenhum grupo encontrado" : "Nenhum grupo cadastrado"}
+            {searchTerm ? "Nenhum encontrado" : "Nada para exibir"}
           </h3>
           <p className="text-muted-foreground">
             {searchTerm 
               ? "Tente pesquisar com outros termos." 
-              : "Você ainda não possui grupos aprovados para promover."
+              : "Você ainda não possui itens aprovados para promover."
             }
           </p>
         </div>
@@ -280,7 +271,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-2 sm:px-3"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -294,7 +284,6 @@ const GroupSelector = ({ onGroupSelect, onBack, selectedPlanId }: GroupSelectorP
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-2 sm:px-3"
           >
             <ChevronRight className="w-4 h-4" />
           </Button>

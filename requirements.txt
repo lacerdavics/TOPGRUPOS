@@ -1,0 +1,14 @@
+# Dependências para o módulo de otimização de imagens
+Flask==3.0.0
+Pillow==10.1.0
+redis==5.0.1
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Dependências opcionais para formatos avançados
+pillow-avif-plugin==1.4.3  # Para suporte AVIF
+pillow-heif==0.13.0        # Para suporte HEIF/HEIC
+
+# Para desenvolvimento e testes
+pytest==7.4.3
+pytest-flask==1.3.0

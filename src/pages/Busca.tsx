@@ -11,6 +11,7 @@ import { searchGroups } from "@/services/groupService";
 import { usePagination } from "@/hooks/usePagination";
 import { ArrowLeft, Search, Filter, Plus } from "lucide-react";
 import { decodeHtmlEntities } from "@/lib/utils";
+import SEOHead from "@/components/SEOHead";
 
 const Busca = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -92,6 +93,14 @@ const Busca = () => {
     pagination.resetPage();
   };
 
+  // SEO data for search page
+  const searchTitle = searchTerm 
+    ? `Busca: "${searchTerm}" | Grupos do Telegram | TopGrupos`
+    : "Buscar Grupos do Telegram | TopGrupos";
+  const searchDescription = searchTerm
+    ? `Resultados da busca por "${searchTerm}" em grupos do Telegram. Encontre comunidades ativas e verificadas.`
+    : "Busque grupos do Telegram por categoria, nome ou interesse. Mais de 500 grupos ativos organizados e verificados.";
+  const searchUrl = `https://topgrupostele.com.br/busca${searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : ''}`;
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -112,6 +121,14 @@ const Busca = () => {
 
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden">
+      <SEOHead
+        title={searchTitle}
+        description="Busque grupos do Telegram por categoria, nome ou interesse. Milhares de grupos ativos organizados e verificados."
+        url={searchUrl}
+        canonical={searchUrl}
+        noindex={!searchTerm} // Only index search pages with actual search terms
+      />
+      
       <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -122,11 +139,11 @@ const Busca = () => {
             </Link>
           </Button>
           
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-            Buscar <span className="text-primary">Grupos</span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+            {searchTerm ? `Busca: "${searchTerm}"` : "Buscar Grupos do Telegram"}
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            {searchTerm ? `Resultados para "${searchTerm}"` : "Encontre grupos do seu interesse"}
+            {searchTerm ? `${filteredGroups.length} resultados encontrados` : "Encontre grupos do Telegram do seu interesse"}
           </p>
         </div>
 
@@ -195,7 +212,7 @@ const Busca = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
             <div>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Página {pagination.currentPage} de {pagination.totalPages} • {filteredGroups.length} resultado{filteredGroups.length !== 1 ? 's' : ''} encontrado{filteredGroups.length !== 1 ? 's' : ''}
+                Página {pagination.currentPage} de {pagination.totalPages} • {filteredGroups.length} grupo{filteredGroups.length !== 1 ? 's' : ''} aprovado{filteredGroups.length !== 1 ? 's' : ''} encontrado{filteredGroups.length !== 1 ? 's' : ''}
               </p>
             </div>
             {filteredGroups.length > 0 && (

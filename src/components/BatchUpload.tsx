@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, Play, Pause, Square, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { telegramBatchService } from '@/services/telegramBatchService';
 import { addGroup } from '@/services/groupService';
-import { enhancedImageCacheService } from '@/services/enhancedImageCacheService';
+import { webpConversionService } from '@/services/webpConversionService';
 import { decodeHtmlEntities } from '@/lib/utils';
 import { User } from 'firebase/auth';
 

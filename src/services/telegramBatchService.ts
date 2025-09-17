@@ -90,10 +90,8 @@ class TelegramBatchService {
               has_custom_image: apiResult.open_graph?.has_custom_image
             };
             
-            // Se não tem imagem personalizada, não incluir a imagem
-            if (!apiResult.is_valid_for_registration) {
-              groupInfo.photo_url = undefined;
-            }
+            // CHANGED: Always include photo_url if available, even for telesco.pe
+            // The auto-update service will handle downloading and converting these images
             
             results[url] = groupInfo;
           } else {
@@ -258,7 +256,8 @@ class TelegramBatchService {
         .trim();
       
       if (!sanitizedName) {
-        return `https://ui-avatars.com/api/?name=TG&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true`;
+        const format = typeof document !== 'undefined' && document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0 ? 'webp' : 'png';
+        return `https://ui-avatars.com/api/?name=TG&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true&format=${format}`;
       }
       
       const initials = sanitizedName
@@ -271,10 +270,12 @@ class TelegramBatchService {
       // Fallback to 'TG' if no valid initials found
       const safeInitials = initials || 'TG';
       
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(safeInitials)}&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true`;
+      const format = typeof document !== 'undefined' && document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0 ? 'webp' : 'png';
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(safeInitials)}&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true&format=${format}`;
     } catch (error) {
       console.warn('Failed to generate fallback image URL:', error);
-      return `https://ui-avatars.com/api/?name=TG&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true`;
+      const format = typeof document !== 'undefined' && document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0 ? 'webp' : 'png';
+      return `https://ui-avatars.com/api/?name=TG&size=400&background=1D4ED8&color=ffffff&font-size=0.4&bold=true&format=${format}`;
     }
   }
 

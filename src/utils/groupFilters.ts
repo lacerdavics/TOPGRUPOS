@@ -8,7 +8,7 @@ export const BLOCKED_GROUP_TITLES = [
 export const isBlockedGroupName = (name?: string): boolean => {
   if (!name) return false;
   const normalized = name.trim().toLowerCase();
-  return BLOCKED_GROUP_TITLES.includes(normalized);
+  return BLOCKED_GROUP_TITLES.some(blocked => normalized === blocked);
 };
 
 export const filterBlockedGroups = <T extends { name?: string }>(groups: T[]): T[] => {

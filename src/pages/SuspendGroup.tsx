@@ -48,7 +48,6 @@ const SuspendGroup: React.FC = () => {
     try {
       await updateDoc(doc(db, "groups", groupId), {
         approved: false,
-        suspended: true,
         suspendedAt: new Date(),
         suspendedBy: currentUser?.uid
       });
@@ -122,13 +121,13 @@ const SuspendGroup: React.FC = () => {
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800 dark:text-blue-200">
-                  <p className="font-semibold mb-2">O que acontece ao suspender:</p>
+                  <p className="font-semibold mb-2">O que acontece ao remover:</p>
                   <ul className="space-y-1 text-sm">
                     <li>• O grupo será removido da plataforma temporariamente</li>
                     <li>• Não será deletado permanentemente</li>
                     <li>• Pode ser reativado posteriormente por um administrador</li>
                     <li>• Usuários não conseguirão mais encontrá-lo nas buscas</li>
-                    <li>• O grupo ficará marcado como "suspenso" no sistema</li>
+                    <li>• O grupo ficará marcado como "não aprovado" no sistema</li>
                   </ul>
                 </div>
               </div>
@@ -157,7 +156,7 @@ const SuspendGroup: React.FC = () => {
                 ) : (
                   <>
                     <Ban className="w-5 h-5" />
-                    Suspender Grupo
+                    Remover da Listagem
                   </>
                 )}
               </Button>

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useResponsiveBreakpoints } from "@/hooks/useResponsiveBreakpoints";
 import PromotionFlow from "@/components/PromotionFlow";
+import SEOHead from "@/components/SEOHead";
 
 const Promover = () => {
   const { isMobile } = useResponsiveBreakpoints();
@@ -96,6 +97,13 @@ const Promover = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-card to-background pb-safe overflow-x-hidden mobile-responsive">
+      <SEOHead
+        title="Promover Grupo do Telegram | Turbine seu Crescimento | TopGrupos"
+        description="🚀 Promova seu grupo do Telegram e ganhe milhares de membros! Planos a partir de R$ 30. Resultados garantidos, pagamento seguro via PIX."
+        keywords="promover grupo telegram, divulgar grupo telegram, marketing telegram, crescer grupo telegram, membros telegram, publicidade telegram, impulsionar grupo telegram"
+        url="https://topgrupostele.com.br/promover"
+        canonical="https://topgrupostele.com.br/promover"
+      />
       
       {/* Hero Section */}
       <section className="relative py-12 md:py-20 px-4 text-center overflow-hidden">
@@ -107,11 +115,11 @@ const Promover = () => {
           </Badge>
           
           <h1 className="text-2xl sm:text-4xl md:text-6xl font-heading font-bold mb-6 bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent leading-tight px-2">
-            Mais membros para o seu grupo no Telegram!
+            Promova seu Grupo do Telegram e Ganhe Milhares de Membros!
           </h1>
           
           <p className="text-base sm:text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed px-2">
-            Divulgue seu grupo para <strong className="text-primary">milhares de pessoas</strong> e cresça rápido de forma orgânica e segura.
+            Divulgue seu grupo para <strong className="text-primary">milhares de pessoas ativas</strong> e cresça rápido de forma orgânica e segura. Planos a partir de R$ 30!
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 sm:mb-12 px-2">

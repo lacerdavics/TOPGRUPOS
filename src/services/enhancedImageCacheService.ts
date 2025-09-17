@@ -115,11 +115,16 @@ class EnhancedImageCacheService {
     }
 
     try {
-      // SIMPLIFIED: Always use original URL to avoid proxy issues
-      // No more complex optimization that might be failing
+      // For Firebase Storage URLs (WebP), use directly
+      if (originalUrl.includes('firebasestorage.googleapis.com') && originalUrl.includes('.webp')) {
+        console.log('✅ Using Firebase Storage WebP image directly:', originalUrl);
+        return originalUrl;
+      }
+      
+      // For other URLs, use original URL to avoid proxy issues
       let optimizedUrl = originalUrl;
       
-      console.log('✅ Using direct URL (no optimization):', optimizedUrl);
+      console.log('✅ Using direct URL (Firebase Storage or API URL):', optimizedUrl);
 
       // Cache the result
       const cacheData: CachedImageData = {

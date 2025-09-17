@@ -24,7 +24,7 @@ const Privacidade = () => {
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: {new Date('2025-01-15').toLocaleDateString('pt-BR')}
             </p>
           </div>
 
@@ -254,9 +254,9 @@ const Privacidade = () => {
                   seus direitos, entre em contato conosco:
                 </p>
                 <div className="space-y-2 text-sm">
-                  <p>E-mail: privacidade@topgrupos.com</p>
+                  <p>E-mail: privacidade@topgrupostele.com.br</p>
                   <p>WhatsApp: <Link to="/contato" className="text-primary hover:underline">(31) 99148-2323</Link></p>
-                  <p>Página de contato: <Link to="/contato" className="text-primary hover:underline">topgrupos.com/contato</Link></p>
+                  <p>Página de contato: <Link to="/contato" className="text-primary hover:underline">topgrupostele.com.br/contato</Link></p>
                 </div>
               </div>
             </Card>

@@ -168,5 +168,27 @@ service cloud.firestore {
       // Apenas administradores podem gerenciar configurações
       allow create, update, delete: if isAdmin();
     }
+    
+    // Regras para grupos promovidos
+    match /promotedGroups/{documentId} {
+      // Usuários autenticados podem criar promoções
+      allow create: if request.auth != null;
+      
+      // Usuários podem ler suas próprias promoções
+      allow read: if request.auth != null && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Administradores podem ler e modificar todas as promoções
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Regras para banners publicitários
+    match /banners/{bannerId} {
+      // Qualquer um pode ler banners (para exibir publicidade)
+      allow read: if true;
+      
+      // Apenas administradores podem criar, atualizar e deletar banners
+      allow create, update, delete: if isAdmin();
+    }
   }
 }

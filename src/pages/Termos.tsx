@@ -24,7 +24,7 @@ const Termos = () => {
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Última atualização: {new Date().toLocaleDateString('pt-BR')}
+              Última atualização: {new Date('2025-01-15').toLocaleDateString('pt-BR')}
             </p>
           </div>
 

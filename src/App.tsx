@@ -34,6 +34,12 @@ import Promover from "./pages/Promover";
 import DeleteGroup from "./pages/DeleteGroup";
 import SuspendGroup from "./pages/SuspendGroup";
 import ReportGroup from "./pages/ReportGroup";
+import RecategorizeGroup from "./pages/RecategorizeGroup";
+import AdminPanel from "./pages/AdminPanel";
+import UploadBanner from "./pages/UploadBanner";
+import AgeVerification from "./pages/AgeVerification";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 const queryClient = new QueryClient();
 
@@ -79,9 +85,19 @@ const AppContent = () => {
             <Route path="/grupo/:groupId/apagar" element={<DeleteGroup />} />
             <Route path="/grupo/:groupId/suspender" element={<SuspendGroup />} />
             <Route path="/grupo/:groupId/denunciar" element={<ReportGroup />} />
+            <Route path="/grupo/:groupId/recategorizar" element={<RecategorizeGroup />} />
             <Route path="/report/:groupId" element={<Report />} />
             <Route path="/promover" element={<Promover />} />
             <Route path="/meus-grupos" element={<MeusGrupos />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/upload-banner" element={<UploadBanner />} />
+
+            {/* Blog Routes */}
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+
+            {/* Age Verification */}
+            <Route path="/verificacao-idade" element={<AgeVerification />} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

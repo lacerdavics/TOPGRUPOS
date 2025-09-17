@@ -18,7 +18,6 @@ export interface EnhancedGroup {
   imageUrl?: string;
   createdAt: Date;
   viewCount?: number;
-  suspended?: boolean;
 }
 
 // Compatible interface for optimized groups
@@ -31,7 +30,6 @@ export interface OptimizedGroupCompatible {
   imageUrl?: string;
   createdAt: Date;
   viewCount?: number;
-  suspended?: boolean;
 }
 
 interface EnhancedGroupCardProps {
@@ -61,7 +59,7 @@ const EnhancedGroupCard: React.FC<EnhancedGroupCardProps> = ({
     navigate(`/grupo/${group.id}/descricao?name=${encodeURIComponent(group.name)}&description=${encodeURIComponent(group.description)}&telegramUrl=${encodeURIComponent(group.telegramUrl)}&category=${encodeURIComponent(group.category)}&imageUrl=${encodeURIComponent(group.imageUrl || '')}&viewCount=${group.viewCount || 0}`);
   };
 
-  if (group.suspended) {
+  if ((group as any).approved === false) {
     return null; // Don't render suspended groups
   }
 
@@ -71,12 +69,13 @@ const EnhancedGroupCard: React.FC<EnhancedGroupCardProps> = ({
         {/* Image Container */}
         <div className="relative aspect-square w-full overflow-hidden">
           <IntelligentGroupImage
+            fallbackImageUrl={(group as any).profileImage || group.imageUrl}
             telegramUrl={group.telegramUrl}
-            fallbackImageUrl={group.imageUrl}
             groupName={sanitizedName}
             alt={`Imagem do grupo ${sanitizedName}`}
             className="w-full h-full group-hover:scale-[1.05] transition-transform duration-500"
             priority={false}
+            groupId={group.id}
           />
           
           {/* Content Overlay */}

@@ -19,44 +19,8 @@ import { getAnalyticsConfig } from "./analyticsConfigService";
 import { getFakePopularGroups } from "./fakeAnalyticsService";
 import { getConfiguredPopularGroupsByCategory, getConfiguredPopularGroups } from "./popularGroupsService";
 import { filterBlockedGroups } from "@/utils/groupFilters";
-
-// Helper function to check if an image is a real uploaded image (not generic Telegram profile)
-const isRealUploadedImage = (imageUrl: string): boolean => {
-  if (!imageUrl) {
-    console.log(`❌ Imagem vazia/nula: ${imageUrl}`);
-    return false;
-  }
-  
-  console.log(`🔍 Analisando URL: ${imageUrl}`);
-  
-  // Exclude telesco.pe domains (generic Telegram avatars)
-  if (imageUrl.includes('telesco.pe')) {
-    console.log(`❌ Rejeitada (telesco.pe): ${imageUrl}`);
-    return false;
-  }
-  
-  // Exclude Telegram userpic API (generic profile images with initials)
-  if (imageUrl.includes('t.me/i/userpic')) {
-    console.log(`❌ Rejeitada (userpic): ${imageUrl}`);
-    return false;
-  }
-  
-  // Exclude data:image/svg+xml (generic SVG avatars with initials)
-  if (imageUrl.startsWith('data:image/svg+xml')) {
-    console.log(`❌ Rejeitada (SVG genérico): ${imageUrl.substring(0, 50)}...`);
-    return false;
-  }
-  
-  // Exclude ui-avatars.com (generic avatar service)
-  if (imageUrl.includes('ui-avatars.com')) {
-    console.log(`❌ Rejeitada (ui-avatars): ${imageUrl}`);
-    return false;
-  }
-  
-  // If it has any other URL format, consider it a real uploaded image
-  console.log(`✅ ACEITA como imagem real: ${imageUrl}`);
-  return true;
-};
+import { isGroupImageReal } from "@/utils/groupValidation";
+import { filterAdultGroups, isAgeVerified } from "@/utils/ageVerification";
 
 export interface GroupWithStats {
   id: string;
@@ -76,6 +40,9 @@ export interface GroupWithStats {
 // Get popular groups (configured manually or analytics-based)
 export const getPopularGroups = async (category?: string, limitCount: number = 10): Promise<GroupWithStats[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     // For category 'all', check for general popular groups configuration
     if (category === 'all' || !category) {
       try {
@@ -100,7 +67,8 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
                     ...data,
                     viewCount: data.viewCount || 0,
                     createdAt: data.createdAt?.toDate() || new Date(),
-                    imageUrl: data.profileImage
+                    imageUrl: data.profileImage,
+                    profileImage: data.profileImage
                   } as GroupWithStats;
                 }
                 return null;
@@ -114,7 +82,9 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
           const validGeneralGroups = configuredGeneralGroups.filter(group => group !== null) as GroupWithStats[];
           
           if (validGeneralGroups.length > 0) {
-            return filterBlockedGroups(validGeneralGroups).slice(0, limitCount);
+            const blockedFiltered = filterBlockedGroups(validGeneralGroups);
+            const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+            return ageFiltered.slice(0, limitCount);
           }
         }
       } catch (error) {
@@ -148,10 +118,11 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       viewCount: doc.data().viewCount || 0,
-      imageUrl: doc.data().profileImage // Map profileImage to imageUrl
+      profileImage: doc.data().profileImage, // Campo principal
+      imageUrl: doc.data().profileImage // Compatibilidade
     })) as GroupWithStats[];
     
-    const availableGroups = allGroups.filter(group => !group.suspended);
+    const availableGroups = allGroups; // All groups are already approved from query
 
     // If we have configured groups, use them for the configured positions
     if (configuredGroups.length > 0) {
@@ -187,8 +158,8 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
         if (config.useRealAnalytics) {
           // Sort with priority: 1) groups with real uploaded images first, 2) view count
           const sortedRemaining = remainingGroups.sort((a, b) => {
-            const aHasImage = isRealUploadedImage(a.imageUrl);
-            const bHasImage = isRealUploadedImage(b.imageUrl);
+            const aHasImage = isRealUploadedImage(a.profileImage);
+            const bHasImage = isRealUploadedImage(b.profileImage);
             
             // Priority 1: Groups with images come first
             if (aHasImage && !bHasImage) return -1;
@@ -201,8 +172,8 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
         } else {
           // Use fake analytics for remaining slots, but prioritize groups with real uploaded images
           const sortedRemaining = remainingGroups.sort((a, b) => {
-            const aHasImage = isRealUploadedImage(a.imageUrl);
-            const bHasImage = isRealUploadedImage(b.imageUrl);
+            const aHasImage = isRealUploadedImage(a.profileImage);
+            const bHasImage = isRealUploadedImage(b.profileImage);
             
             // Priority: Groups with images come first
             if (aHasImage && !bHasImage) return -1;
@@ -210,7 +181,7 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
             
             return 0; // Keep original order for same image status
           });
-          const fakePopularRemaining = await getFakePopularGroups(sortedRemaining, remainingSlotsNeeded);
+          const fakePopularRemaining = await getFakePopularGroups(remainingGroups, remainingSlotsNeeded);
           resultGroups.push(...fakePopularRemaining);
         }
       }
@@ -227,8 +198,8 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
       // Use real analytics - sort with priority: 1) groups with valid images first, 2) view count
       const sortedGroups = availableGroups.sort((a, b) => {
         // Check for real uploaded images (not generic Telegram profile images)  
-        const aHasValidImage = !!(a.imageUrl && isRealUploadedImage(a.imageUrl));
-        const bHasValidImage = !!(b.imageUrl && isRealUploadedImage(b.imageUrl));
+        const aHasValidImage = !!(a.profileImage && isGroupImageReal(a.profileImage));
+        const bHasValidImage = !!(b.profileImage && isGroupImageReal(b.profileImage));
         
         console.log(`🔍 Comparando: A(${a.name}) tem foto válida: ${aHasValidImage}, B(${b.name}) tem foto válida: ${bHasValidImage}`);
         
@@ -246,17 +217,19 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
         return (b.viewCount || 0) - (a.viewCount || 0);
       });
       
-      const withValidImages = sortedGroups.filter(g => isRealUploadedImage(g.imageUrl));
-      const withoutValidImages = sortedGroups.filter(g => !isRealUploadedImage(g.imageUrl));
+      const withValidImages = sortedGroups.filter(g => isGroupImageReal(g.profileImage));
+      const withoutValidImages = sortedGroups.filter(g => !isGroupImageReal(g.profileImage));
       
       console.log(`📸 REAL ANALYTICS - Grupos com foto válida: ${withValidImages.length} | Sem foto/foto inválida: ${withoutValidImages.length}`);
-      return filterBlockedGroups(sortedGroups).slice(0, limitCount);
+      const blockedFiltered = filterBlockedGroups(sortedGroups);
+      const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+      return ageFiltered.slice(0, limitCount);
     } else {
       // Use fake analytics - prioritize groups with valid images, then randomize
       const sortedGroups = availableGroups.sort((a, b) => {
         // Check for real uploaded images (not generic Telegram profile images)
-        const aHasValidImage = isRealUploadedImage(a.imageUrl);
-        const bHasValidImage = isRealUploadedImage(b.imageUrl);
+        const aHasValidImage = isGroupImageReal(a.profileImage);
+        const bHasValidImage = isGroupImageReal(b.profileImage);
         
         console.log(`🔍 FAKE - Comparando: A(${a.name}) foto: ${aHasValidImage}, B(${b.name}) foto: ${bHasValidImage}`);
         
@@ -273,11 +246,14 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
         return 0; // Keep original order for same image status
       });
       
-      const withValidImages = sortedGroups.filter(g => isRealUploadedImage(g.imageUrl));
-      const withoutValidImages = sortedGroups.filter(g => !isRealUploadedImage(g.imageUrl));
+      const withValidImages = sortedGroups.filter(g => isGroupImageReal(g.profileImage));
+      const withoutValidImages = sortedGroups.filter(g => !isGroupImageReal(g.profileImage));
       
       console.log(`📸 FAKE ANALYTICS - Grupos com foto válida: ${withValidImages.length} | Sem foto/foto inválida: ${withoutValidImages.length}`);
-      return filterBlockedGroups(await getFakePopularGroups(sortedGroups, limitCount));
+      const fakePopular = await getFakePopularGroups(sortedGroups, limitCount);
+      const blockedFiltered = filterBlockedGroups(fakePopular);
+      const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+      return ageFiltered;
     }
   } catch (error) {
     console.error("❌ Erro ao buscar grupos populares:", error);
@@ -288,6 +264,9 @@ export const getPopularGroups = async (category?: string, limitCount: number = 1
 // Get all groups from a category (for complete pagination)
 export const getAllCategoryGroups = async (category: string): Promise<GroupWithStats[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     console.log(`🔍 Carregando TODOS os grupos da categoria: "${category}"`);
     
     let q = query(
@@ -305,14 +284,16 @@ export const getAllCategoryGroups = async (category: string): Promise<GroupWithS
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       viewCount: doc.data().viewCount || 0,
-      imageUrl: doc.data().profileImage // Map profileImage to imageUrl
+      imageUrl: doc.data().profileImage, // Map profileImage to imageUrl
+      profileImage: doc.data().profileImage // Keep profileImage field
     })) as GroupWithStats[];
     
-    // Filter out suspended groups
-    const allGroups = mappedGroups.filter(group => !group.suspended);
+    // All groups are already approved from query
+    const allGroups = mappedGroups;
     
     console.log(`✅ Total de grupos carregados: ${allGroups.length}`);
-    return filterBlockedGroups(allGroups);
+    const blockedFiltered = filterBlockedGroups(allGroups);
+    return filterAdultGroups(blockedFiltered, includeAdultContent);
   } catch (error) {
     console.error("❌ Erro ao carregar todos os grupos da categoria:", error);
     return [];
@@ -346,8 +327,8 @@ export const getCategoryGroupsWithSections = async (
       // Use real analytics - sort with priority: 1) groups with valid images first, 2) view count
       const sortedGroups = [...allGroups].sort((a, b) => {
         // Check for real uploaded images (not generic Telegram profile images)
-        const aHasValidImage = isRealUploadedImage(a.imageUrl);
-        const bHasValidImage = isRealUploadedImage(b.imageUrl);
+        const aHasValidImage = isGroupImageReal(a.imageUrl);
+        const bHasValidImage = isGroupImageReal(b.imageUrl);
         
         console.log(`🔍 CATEGORIA REAL - Comparando: A(${a.name}) foto: ${aHasValidImage}, B(${b.name}) foto: ${bHasValidImage}`);
         
@@ -365,21 +346,34 @@ export const getCategoryGroupsWithSections = async (
         return (b.viewCount || 0) - (a.viewCount || 0);
       });
       const popularGroups = sortedGroups.slice(0, popularLimit);
-      const regularGroups = sortedGroups.slice(popularLimit);
       
-      const popularWithValid = popularGroups.filter(g => isRealUploadedImage(g.imageUrl));
-      const regularWithValid = regularGroups.filter(g => isRealUploadedImage(g.imageUrl));
+      // CRITICAL: Exclude popular groups from regular groups to avoid duplication
+      const popularGroupIds = new Set(popularGroups.map(g => g.id));
+      const regularGroups = sortedGroups
+        .filter(group => !popularGroupIds.has(group.id));
+      
+      const popularWithValid = popularGroups.filter(g => isGroupImageReal(g.imageUrl));
+      const regularWithValid = regularGroups.filter(g => isGroupImageReal(g.imageUrl));
       
       console.log(`📸 CATEGORIA REAL - Populares: ${popularWithValid.length}/${popularGroups.length} com foto válida | Regulares: ${regularWithValid.length}/${regularGroups.length} com foto válida`);
-      console.log(`🎯 PRIMEIRA CATEGORIA - Primeiros 3 populares: ${popularGroups.slice(0, 3).map(g => `${g.name} (foto: ${isRealUploadedImage(g.imageUrl)})`).join(', ')}`);
-      return { popularGroups: filterBlockedGroups(popularGroups), regularGroups: filterBlockedGroups(regularGroups) };
+      console.log(`🚫 DUPLICAÇÃO EVITADA - ${popularGroups.length} grupos removidos da seção regular`);
+      console.log(`🎯 PRIMEIRA CATEGORIA - Primeiros 3 populares: ${popularGroups.slice(0, 3).map(g => `${g.name} (foto: ${isGroupImageReal(g.imageUrl)})`).join(', ')}`);
+      const popularBlocked = filterBlockedGroups(popularGroups);
+      const regularBlocked = filterBlockedGroups(regularGroups);
+      
+      // Apply age filtering
+      const includeAdultContent = isAgeVerified();
+      const popularFiltered = filterAdultGroups(popularBlocked, includeAdultContent);
+      const regularFiltered = filterAdultGroups(regularBlocked, includeAdultContent);
+      
+      return { popularGroups: popularFiltered, regularGroups: regularFiltered };
     } else {
       console.log('🎭 USANDO FAKE ANALYTICS');
       // Use fake analytics - prioritize groups with valid images for both sections
       const sortedGroups = [...allGroups].sort((a, b) => {
         // Check for real uploaded images (not generic Telegram profile images)
-        const aHasValidImage = isRealUploadedImage(a.imageUrl);
-        const bHasValidImage = isRealUploadedImage(b.imageUrl);
+        const aHasValidImage = isGroupImageReal(a.imageUrl);
+        const bHasValidImage = isGroupImageReal(b.imageUrl);
         
         console.log(`🔍 CATEGORIA FAKE - Comparando: A(${a.name}) foto: ${aHasValidImage}, B(${b.name}) foto: ${bHasValidImage}`);
         
@@ -397,20 +391,31 @@ export const getCategoryGroupsWithSections = async (
       });
       
       const popularGroups = await getFakePopularGroups(sortedGroups, popularLimit);
-      const popularIds = popularGroups.map(g => g.id);
-      const remainingGroups = sortedGroups.filter(g => !popularIds.includes(g.id));
       
-      const regularGroupsWithViews = remainingGroups.map(group => ({
+      // CRITICAL: Exclude popular groups from regular groups to avoid duplication
+      const popularGroupIds = new Set(popularGroups.map(g => g.id));
+      const remainingGroups = sortedGroups.filter(g => !popularGroupIds.has(g.id));
+      
+      const regularGroups = remainingGroups.map(group => ({
         ...group,
         viewCount: Math.floor(Math.random() * 10000) + 5000
       }));
       
-      const popularWithValid = popularGroups.filter(g => isRealUploadedImage(g.imageUrl));
-      const regularWithValid = regularGroupsWithViews.filter(g => isRealUploadedImage(g.imageUrl));
+      const popularWithValid = popularGroups.filter(g => isGroupImageReal(g.imageUrl));
+      const regularWithValid = regularGroups.filter(g => isGroupImageReal(g.imageUrl));
       
-      console.log(`📸 CATEGORIA FAKE - Populares: ${popularWithValid.length}/${popularGroups.length} com foto válida | Regulares: ${regularWithValid.length}/${regularGroupsWithViews.length} com foto válida`);
-      console.log(`🎯 PRIMEIRA CATEGORIA FAKE - Primeiros 3 populares: ${popularGroups.slice(0, 3).map(g => `${g.name} (foto: ${isRealUploadedImage(g.imageUrl)})`).join(', ')}`);
-      return { popularGroups: filterBlockedGroups(popularGroups), regularGroups: filterBlockedGroups(regularGroupsWithViews) };
+      console.log(`📸 CATEGORIA FAKE - Populares: ${popularWithValid.length}/${popularGroups.length} com foto válida | Regulares: ${regularWithValid.length}/${regularGroups.length} com foto válida`);
+      console.log(`🚫 DUPLICAÇÃO EVITADA - ${popularGroups.length} grupos removidos da seção regular`);
+      console.log(`🎯 PRIMEIRA CATEGORIA FAKE - Primeiros 3 populares: ${popularGroups.slice(0, 3).map(g => `${g.name} (foto: ${isGroupImageReal(g.imageUrl)})`).join(', ')}`);
+      const popularBlocked = filterBlockedGroups(popularGroups);
+      const regularBlocked = filterBlockedGroups(regularGroups);
+      
+      // Apply age filtering
+      const includeAdultContent = isAgeVerified();
+      const popularFiltered = filterAdultGroups(popularBlocked, includeAdultContent);
+      const regularFiltered = filterAdultGroups(regularBlocked, includeAdultContent);
+      
+      return { popularGroups: popularFiltered, regularGroups: regularFiltered };
     }
   } catch (error) {
     console.error("❌ Erro ao buscar grupos com seções:", error);
@@ -426,6 +431,9 @@ export const getRemainingGroups = async (
   excludeIds: string[] = []
 ): Promise<{ groups: GroupWithStats[], lastDoc?: QueryDocumentSnapshot }> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     let q = query(
       collection(db, "groups"),
       where("approved", "==", true)
@@ -443,10 +451,10 @@ export const getRemainingGroups = async (
 
     const querySnapshot = await getDocs(q);
     
-    // Filter out suspended groups and popular groups that are already shown
+    // Filter out popular groups that are already shown (suspended groups already filtered by approved=true query)
     const filteredDocs = querySnapshot.docs.filter(doc => {
       const data = doc.data();
-      return !data.suspended && !excludeIds.includes(doc.id);
+      return !excludeIds.includes(doc.id);
     });
     
     const groups = filteredDocs.slice(0, pageSize).map(doc => ({
@@ -454,12 +462,15 @@ export const getRemainingGroups = async (
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date(),
       viewCount: doc.data().viewCount || 0,
-      imageUrl: doc.data().profileImage // Map profileImage to imageUrl
+      imageUrl: doc.data().profileImage, // Map profileImage to imageUrl
+      profileImage: doc.data().profileImage // Keep profileImage field
     })) as GroupWithStats[];
 
     const newLastDoc = filteredDocs[Math.min(filteredDocs.length - 1, pageSize - 1)];
 
-    return { groups: filterBlockedGroups(groups), lastDoc: newLastDoc };
+    const blockedFiltered = filterBlockedGroups(groups);
+    const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+    return { groups: ageFiltered, lastDoc: newLastDoc };
   } catch (error) {
     console.error("❌ Erro ao buscar grupos restantes:", error);
     return { groups: [] };
@@ -469,6 +480,7 @@ export const getRemainingGroups = async (
 // Get groups by user
 export const getGroupsByUser = async (userId: string): Promise<GroupWithStats[]> => {
   try {
+    // Don't filter adult content for user's own groups - they should see all their groups
     const q = query(
       collection(db, "groups"),
       where("createdBy", "==", userId),
@@ -500,14 +512,14 @@ export const getGroupStats = async () => {
     // Get all groups and filter for active/suspended in memory to avoid composite index
     const allGroups = allGroupsSnapshot.docs.map(doc => doc.data());
     
-    // Active groups (approved and not suspended) 
-    const activeGroups = allGroups.filter(group => group.approved === true && group.suspended !== true).length;
+    // Active groups (approved)
+    const activeGroups = allGroups.filter(group => group.approved === true).length;
 
-    // Suspended groups
-    const suspendedGroups = allGroups.filter(group => group.suspended === true).length;
+    // Non-approved groups (previously called suspended)
+    const suspendedGroups = allGroups.filter(group => group.approved === false).length;
 
     // Pending groups
-    const pendingGroups = allGroups.filter(group => group.approved === false).length;
+    const pendingGroups = suspendedGroups; // Same as non-approved groups
 
     return {
       totalGroups,

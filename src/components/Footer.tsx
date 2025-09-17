@@ -51,7 +51,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border/50 text-center">
           <p className="text-muted-foreground">
-            © 2024 TopGrupos. Todos os direitos reservados. 
+            © 2025 TopGrupos. Todos os direitos reservados. 
             <span className="mx-2">•</span>
             Feito com ❤️ para a comunidade Telegram
           </p>

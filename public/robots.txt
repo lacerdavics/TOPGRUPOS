@@ -1,14 +1,40 @@
+# Sitemap
+Sitemap: https://topgrupostele.com.br/sitemap.xml
+
+# Crawl-delay for better server performance
+Crawl-delay: 1
+
+# Block admin and auth pages
+User-agent: *
+Disallow: /admin
+Disallow: /auth
+Disallow: /meus-grupos
+Disallow: /editar-grupo
+Disallow: /upload-banner
+Disallow: /verificacao-idade
+
+# Allow important pages
 User-agent: Googlebot
 Allow: /
+Allow: /categoria/
+Allow: /grupo/
+Allow: /busca
+Allow: /cadastrar
+Allow: /promover
+Allow: /sobre
+Allow: /contato
 
 User-agent: Bingbot
 Allow: /
+Allow: /categoria/
+Allow: /grupo/
 
 User-agent: Twitterbot
 Allow: /
+Allow: /categoria/
+Allow: /grupo/
 
 User-agent: facebookexternalhit
 Allow: /
-
-User-agent: *
-Allow: /
+Allow: /categoria/
+Allow: /grupo/

@@ -35,10 +35,10 @@ export const SuspendModal: React.FC<SuspendModalProps> = ({
           
           <div className="space-y-2">
             <DialogTitle className="text-lg sm:text-xl font-bold text-orange-900 dark:text-orange-100">
-              Confirmar Suspensão
+              Confirmar Remoção
             </DialogTitle>
             <DialogDescription className="text-sm sm:text-base text-muted-foreground leading-relaxed px-2">
-              Tem certeza que deseja <strong className="text-orange-600">suspender</strong> o grupo:
+              Tem certeza que deseja <strong className="text-orange-600">remover da listagem</strong> o grupo:
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -55,7 +55,7 @@ export const SuspendModal: React.FC<SuspendModalProps> = ({
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs sm:text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-semibold mb-1">O que acontece ao suspender:</p>
+              <p className="font-semibold mb-1">O que acontece ao remover:</p>
               <ul className="space-y-1 text-xs">
                 <li>• O grupo será removido da plataforma</li>
                 <li>• Não será deletado permanentemente</li>
@@ -89,7 +89,7 @@ export const SuspendModal: React.FC<SuspendModalProps> = ({
             ) : (
               <>
                 <Ban className="w-4 h-4" />
-                Suspender Grupo
+                Remover da Listagem
               </>
             )}
           </Button>

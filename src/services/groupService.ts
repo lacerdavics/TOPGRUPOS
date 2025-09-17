@@ -8,13 +8,16 @@ import {
   limit,
   Timestamp,
   DocumentData,
-  QuerySnapshot
+  QuerySnapshot,
+  updateDoc,
+  doc
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Group } from "@/components/GroupCard";
 import { filterBlockedGroups, isBlockedGroupName } from "@/utils/groupFilters";
-import { createExpiredLinkNotification } from "./expiredLinkNotificationService";
 import { getActivePromotedGroupsByCategory } from "./promotionService";
+import { webpConversionService } from "./webpConversionService";
+import { filterAdultGroups, isAgeVerified } from "@/utils/ageVerification";
 
 export interface GroupData {
   name: string;
@@ -38,7 +41,8 @@ const convertFirestoreGroup = (doc: any): Group => {
     description: data.description,
     category: data.category,
     telegramUrl: data.telegramUrl,
-    profileImage: data.profileImage,
+    profileImage: data.profileImage, // Manter profileImage como campo principal
+    imageUrl: data.profileImage, // Compatibilidade com componentes antigos
     createdAt: data.createdAt.toDate(),
     membersCount: data.membersCount
   };
@@ -72,23 +76,28 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
     console.log('✅ Nenhuma duplicata encontrada, prosseguindo com cadastro');
     
     console.log('🔵 addGroup chamado com:', groupData);
-    console.log('🔵 Firestore db instance:', db);
     
-    // Verificar se o nome indica link expirado antes de adicionar
-    if (isBlockedGroupName(groupData.name)) {
-      console.log('🚨 Tentativa de adicionar grupo com link expirado detectada:', groupData.name);
+    // Process image conversion to WebP if it's an external URL
+    let finalImageUrl = groupData.profileImage;
+    
+    if (groupData.profileImage && (groupData.profileImage.startsWith('http://') || groupData.profileImage.startsWith('https://'))) {
+      console.log('🔄 Convertendo imagem para WebP antes de salvar no Firestore...');
       
-      // Criar notificação para o usuário
-      if (groupData.userEmail) {
-        await createExpiredLinkNotification(
-          groupData.userEmail,
-          groupData.name,
-          'temp-id', // Será atualizado se necessário
-          groupData.telegramUrl
-        );
+      const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const conversionResult = await webpConversionService.convertAndUploadToWebP(
+        groupData.profileImage, 
+        tempGroupId
+        // Não há imagem antiga para excluir no cadastro inicial
+      );
+      
+      if (conversionResult.success && conversionResult.webpUrl) {
+        finalImageUrl = conversionResult.webpUrl;
+        console.log('✅ Imagem convertida para WebP e salva no Firebase Storage:', finalImageUrl);
+      } else {
+        console.warn('⚠️ Falha na conversão WebP, usando URL original da API como fallback:', conversionResult.error);
+        // Fallback: manter a URL original da API
+        finalImageUrl = groupData.profileImage;
       }
-      
-      throw new Error('O link do Telegram parece ter expirado. Verifique se o link está correto e tente novamente. Uma notificação foi enviada sobre este problema.');
     }
     
     // Determine approval status based on photo presence
@@ -100,6 +109,7 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
     
     const docRef = await addDoc(collection(db, "groups"), {
       ...dataToSave,
+      profileImage: finalImageUrl, // Use the processed image URL
       createdAt: Timestamp.now(),
       approved: approved,
       createdBy: userId || 'anonymous',
@@ -123,12 +133,34 @@ export const addGroupApproved = async (groupData: Omit<GroupData, 'createdAt' | 
       categoryInfo: `"${groupData.category}"`
     });
     
+    // Process image conversion to WebP for admin uploads too
+    let finalImageUrl = groupData.profileImage;
+    
+    if (groupData.profileImage && (groupData.profileImage.startsWith('http://') || groupData.profileImage.startsWith('https://'))) {
+      console.log('🔄 Convertendo imagem admin para WebP...');
+      
+      const tempGroupId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const conversionResult = await webpConversionService.convertAndUploadToWebP(
+        groupData.profileImage, 
+        tempGroupId
+        // Não há imagem antiga para excluir no upload admin
+      );
+      
+      if (conversionResult.success && conversionResult.webpUrl) {
+        finalImageUrl = conversionResult.webpUrl;
+        console.log('✅ Imagem admin convertida para WebP:', finalImageUrl);
+      } else {
+        console.warn('⚠️ Falha na conversão WebP admin, usando URL original:', conversionResult.error);
+        finalImageUrl = groupData.profileImage;
+      }
+    }
+    
     // Ensure required fields are present for Firebase rules
     const completeGroupData = {
       ...groupData,
+      profileImage: finalImageUrl, // Use the processed image URL
       createdAt: Timestamp.now(),
       approved: true,
-      suspended: false, // Explicitly set suspended to false
       createdBy: groupData.userId || 'admin-upload',
       viewCount: (groupData as any).viewCount || 0
     };
@@ -149,9 +181,32 @@ export const addGroupApproved = async (groupData: Omit<GroupData, 'createdAt' | 
   }
 };
 
+// Update group category (admin only)
+export const updateGroupCategory = async (groupId: string, newCategory: string): Promise<void> => {
+  try {
+    console.log(`🔄 Atualizando categoria do grupo ${groupId} para: ${newCategory}`);
+    
+    const groupRef = doc(db, "groups", groupId);
+    await updateDoc(groupRef, {
+      category: newCategory,
+      lastRecategorizedAt: Timestamp.now(),
+      recategorizedCount: 1, // This could be incremented if we track multiple recategorizations
+      updatedAt: Timestamp.now()
+    });
+    
+    console.log(`✅ Grupo ${groupId} recategorizado para: ${newCategory}`);
+  } catch (error) {
+    console.error("❌ Erro ao recategorizar grupo:", error);
+    throw error;
+  }
+};
+
 // Get groups by category - OPTIMIZED VERSION WITH PROMOTED GROUPS PRIORITY
 export const getGroupsByCategory = async (category: string): Promise<Group[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     console.log(`🔍 Buscando grupos da categoria: "${category}"`);
     
     // Get promoted groups for this category first
@@ -228,7 +283,8 @@ export const getGroupsByCategory = async (category: string): Promise<Group[]> =>
       });
       
       console.log(`✅ OPTIMIZED: Encontrados ${allGroups.length} grupos para categoria "${category}" (${promotedGroups.length} promovidos)`);
-      return filterBlockedGroups(allGroups);
+      const blockedFiltered = filterBlockedGroups(allGroups);
+      return filterAdultGroups(blockedFiltered, includeAdultContent);
       
     } catch (indexError) {
       console.warn(`⚠️ Índice não disponível para categoria "${category}", usando fallback:`, indexError);
@@ -304,7 +360,8 @@ export const getGroupsByCategory = async (category: string): Promise<Group[]> =>
       });
       
       console.log(`✅ FALLBACK: Encontrados ${allGroups.length} grupos para categoria "${category}" (${promotedGroups.length} promovidos)`);
-      return filterBlockedGroups(allGroups);
+      const blockedFiltered = filterBlockedGroups(allGroups);
+      return filterAdultGroups(blockedFiltered, includeAdultContent);
     }
   } catch (error) {
     console.error(`❌ Erro ao buscar grupos da categoria "${category}":`, error);
@@ -315,6 +372,9 @@ export const getGroupsByCategory = async (category: string): Promise<Group[]> =>
 // Get all approved groups
 export const getAllGroups = async (): Promise<Group[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     const q = query(
       collection(db, "groups"),
       where("approved", "==", true)
@@ -328,12 +388,8 @@ export const getAllGroups = async (): Promise<Group[]> => {
         (group as any).lastRecategorizedAt = data.lastRecategorizedAt;
         (group as any).recategorizedCount = data.recategorizedCount || 0;
         return group;
-      })
-      .filter(group => {
-        // Manually filter out suspended groups
-        const data = querySnapshot.docs.find(doc => doc.id === group.id)?.data() as any;
-        return !(data?.suspended === true);
       });
+      // No need to filter - approved groups are already filtered by query
     
     // Sort with priority: 1) groups with photos first, 2) recategorization, 3) creation date
     groups.sort((a, b) => {
@@ -361,7 +417,8 @@ export const getAllGroups = async (): Promise<Group[]> => {
       return b.createdAt.getTime() - a.createdAt.getTime();
     });
     
-    return filterBlockedGroups(groups);
+    const blockedFiltered = filterBlockedGroups(groups);
+    return filterAdultGroups(blockedFiltered, includeAdultContent);
   } catch (error) {
     console.error("Error getting all groups: ", error);
     return [];
@@ -371,6 +428,9 @@ export const getAllGroups = async (): Promise<Group[]> => {
 // Search groups with intelligent search
 export const searchGroups = async (searchTerm: string, category?: string): Promise<Group[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     // Import the intelligent search service
     const { intelligentSearch } = await import('./intelligentSearchService');
     
@@ -389,12 +449,8 @@ export const searchGroups = async (searchTerm: string, category?: string): Promi
         (group as any).lastRecategorizedAt = data.lastRecategorizedAt;
         (group as any).recategorizedCount = data.recategorizedCount || 0;
         return group;
-      })
-      .filter(group => {
-        // Manually filter out suspended groups
-        const data = querySnapshot.docs.find(doc => doc.id === group.id)?.data() as any;
-        return !(data?.suspended === true);
       });
+      // No need to filter - approved groups are already filtered by query
     
     // Optional category filter (client-side)
     let result = allGroups;
@@ -471,7 +527,8 @@ export const searchGroups = async (searchTerm: string, category?: string): Promi
       });
     }
     
-    return filterBlockedGroups(result);
+    const blockedFiltered = filterBlockedGroups(result);
+    return filterAdultGroups(blockedFiltered, includeAdultContent);
   } catch (error) {
     console.error("Error searching groups: ", error);
     return [];
@@ -481,23 +538,24 @@ export const searchGroups = async (searchTerm: string, category?: string): Promi
 // Get popular groups (most members)
 export const getPopularGroups = async (limitCount: number = 10): Promise<Group[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     const q = query(
       collection(db, "groups"),
       where("approved", "==", true)
     );
     const querySnapshot = await getDocs(q);
     const groups = querySnapshot.docs
-      .map(convertFirestoreGroup)
-      .filter(group => {
-        // Manually filter out suspended groups
-        const data = querySnapshot.docs.find(doc => doc.id === group.id)?.data() as any;
-        return !(data?.suspended === true);
-      });
+      .map(convertFirestoreGroup);
+      // No need to filter - approved groups are already filtered by query
     
     // Sort by membersCount in JavaScript and limit
     groups.sort((a, b) => (b.membersCount || 0) - (a.membersCount || 0));
     
-    return filterBlockedGroups(groups).slice(0, limitCount);
+    const blockedFiltered = filterBlockedGroups(groups);
+    const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+    return ageFiltered.slice(0, limitCount);
   } catch (error) {
     console.error("Error getting popular groups: ", error);
     return [];
@@ -507,23 +565,24 @@ export const getPopularGroups = async (limitCount: number = 10): Promise<Group[]
 // Get recent groups
 export const getRecentGroups = async (limitCount: number = 10): Promise<Group[]> => {
   try {
+    // Check if should include adult content
+    const includeAdultContent = isAgeVerified();
+    
     const q = query(
       collection(db, "groups"),
       where("approved", "==", true)
     );
     const querySnapshot = await getDocs(q);
     const groups = querySnapshot.docs
-      .map(convertFirestoreGroup)
-      .filter(group => {
-        // Manually filter out suspended groups
-        const data = querySnapshot.docs.find(doc => doc.id === group.id)?.data() as any;
-        return !(data?.suspended === true);
-      });
+      .map(convertFirestoreGroup);
+      // No need to filter - approved groups are already filtered by query
     
     // Sort by createdAt in JavaScript and limit
     groups.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     
-    return filterBlockedGroups(groups).slice(0, limitCount);
+    const blockedFiltered = filterBlockedGroups(groups);
+    const ageFiltered = filterAdultGroups(blockedFiltered, includeAdultContent);
+    return ageFiltered.slice(0, limitCount);
   } catch (error) {
     console.error("Error getting recent groups: ", error);
     return [];

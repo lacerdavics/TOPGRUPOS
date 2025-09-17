@@ -1,11 +1,10 @@
 import React, { memo, useCallback, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import MobileOptimizedImage from "@/components/MobileOptimizedImage";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 import { sanitizeGroupTitle, truncateTitle } from "@/utils/groupValidation";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { ExternalLink, Eye } from "lucide-react";
-import { useGroupImageEnhancement } from "@/hooks/useAIImageEnhancement";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useMobileOptimization } from "@/hooks/useMobileOptimization";
@@ -19,7 +18,6 @@ interface EnhancedGroup {
   imageUrl?: string;
   createdAt: Date;
   membersCount?: number;
-  suspended?: boolean;
   viewCount?: number;
 }
 
@@ -41,11 +39,6 @@ const OptimizedGroupCard = memo<OptimizedGroupCardProps>(({
 }) => {
   const { toast } = useToast();
   const { disableAnimations, isMobile } = useMobileOptimization();
-
-  // AI-enhanced image - disabled on low-end devices
-  const { enhancedSrc, isEnhancing, hasEnhancement } = useGroupImageEnhancement(
-    group.imageUrl
-  );
 
   // Memoized calculations
   const decodedName = useMemo(() => decodeHtmlEntities(group.name), [group.name]);
@@ -72,18 +65,20 @@ const OptimizedGroupCard = memo<OptimizedGroupCardProps>(({
         className={`group bg-card border border-border/30 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer h-full ${
           disableAnimations ? '' : 'transform hover:-translate-y-2 hover:border-primary/20'
         } ${
-          group.suspended ? 'opacity-60' : ''
+          (group as any).approved === false ? 'opacity-60' : ''
         } ${className}`}
         onClick={handleGroupClick}
       >
         {/* Image Container */}
         <div className="relative aspect-square w-full overflow-hidden">
-          <MobileOptimizedImage
-            src={group.telegramUrl ? `https://t.me/${group.telegramUrl.replace('@', '').replace('https://t.me/', '')}/photo` : group.imageUrl || ''}
-            fallbackSrc={group.imageUrl}
+          <IntelligentGroupImage
+            fallbackImageUrl={group.imageUrl || (group as any).profileImage}
+            telegramUrl={group.telegramUrl}
+            groupName={sanitizedName}
             alt={`Imagem do grupo ${sanitizedName}`}
             className={`w-full h-full object-cover ${disableAnimations ? '' : 'group-hover:scale-[1.02] transition-transform duration-300'}`}
             priority={priority}
+            groupId={group.id}
           />
           
           {/* Content Overlay */}
@@ -115,7 +110,7 @@ const OptimizedGroupCard = memo<OptimizedGroupCardProps>(({
           className="btn-ver-detalhes"
           onClick={handleButtonClick}
           aria-label={`Ver detalhes do grupo ${sanitizedName}`}
-          disabled={group.suspended}
+         disabled={(group as any).approved === false}
         >
           <ExternalLink className="w-4 h-4" />
           VER DETALHES

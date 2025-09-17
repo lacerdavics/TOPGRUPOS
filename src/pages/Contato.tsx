@@ -80,7 +80,7 @@ const Contato = () => {
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg mb-2">E-mail</h3>
                       <p className="text-muted-foreground mb-2">
-                        contato@topgrupos.com
+                        contato@topgrupostele.com.br
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Resposta em até 24 horas

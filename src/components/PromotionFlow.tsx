@@ -4,35 +4,35 @@ import GroupSelector from "@/components/GroupSelector";
 import PromotionPlans from "@/components/PromotionPlans";
 import PaymentDisplay from "@/components/PaymentDisplay";
 
-type FlowStep = 'plan-selection' | 'group-selection' | 'payment';
+type FlowStep = 'group-selection' | 'plan-selection' | 'payment';
 
 const PromotionFlow = () => {
-  const [currentStep, setCurrentStep] = useState<FlowStep>('plan-selection');
+  const [currentStep, setCurrentStep] = useState<FlowStep>('group-selection');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
   const [qrCode, setQrCode] = useState<string>('');
   const [pixCode, setPixCode] = useState<string>('');
 
-  const handlePlanSelect = (planId: string) => {
-    setSelectedPlanId(planId);
-    setCurrentStep('group-selection');
-  };
-
   const handleGroupSelect = (group: Group) => {
     setSelectedGroup(group);
-    setCurrentStep('payment');
-  };
-
-  const handleBackToPlans = () => {
-    setSelectedGroup(null);
-    setSelectedPlanId('');
     setCurrentStep('plan-selection');
   };
 
+  const handlePlanSelect = (planId: string) => {
+    setSelectedPlanId(planId);
+    setCurrentStep('payment');
+  };
+
   const handleBackToGroups = () => {
+    setSelectedGroup(null);
+    setSelectedPlanId('');
+    setCurrentStep('group-selection');
+  };
+
+  const handleBackToPlans = () => {
     setQrCode('');
     setPixCode('');
-    setCurrentStep('group-selection');
+    setCurrentStep('plan-selection');
   };
 
   const handlePaymentGenerated = (qrCodeData: string, pixCodeData: string) => {
@@ -41,23 +41,23 @@ const PromotionFlow = () => {
   };
 
   switch (currentStep) {
-    case 'plan-selection':
-      return (
-        <PromotionPlans 
-          onPlanSelect={handlePlanSelect}
-          onBack={() => {}}
-        />
-      );
-      
     case 'group-selection':
       return (
         <GroupSelector 
           onGroupSelect={handleGroupSelect}
-          onBack={handleBackToPlans}
-          selectedPlanId={selectedPlanId}
+          onBack={() => {}}
         />
       );
-    
+
+    case 'plan-selection':
+      return (
+        <PromotionPlans 
+          onPlanSelect={handlePlanSelect}
+          onBack={handleBackToGroups}
+          selectedGroup={selectedGroup!}
+        />
+      );
+
     case 'payment':
       return (
         <PaymentDisplay 
@@ -65,11 +65,11 @@ const PromotionFlow = () => {
           pixCode={pixCode}
           selectedGroup={selectedGroup!}
           selectedPlanId={selectedPlanId}
-          onBack={handleBackToGroups}
+          onBack={handleBackToPlans}
           onPaymentGenerated={handlePaymentGenerated}
         />
       );
-    
+
     default:
       return null;
   }

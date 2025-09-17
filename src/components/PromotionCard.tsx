@@ -126,7 +126,7 @@ const PromotionCard = ({ plan, onSelect, savings }: PromotionCardProps) => {
         className={cn("text-sm sm:text-base", getButtonClasses(plan.color, plan.popular))}
       >
         {plan.color === 'accent' ? <Calendar className="w-4 sm:w-5 h-4 sm:h-5 mr-2" /> : <Star className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />}
-        Escolha seu grupo
+        Selecionar
       </Button>
     </Card>
   );

@@ -203,11 +203,34 @@ const Categoria = () => {
   // Structured data for category page
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
+    "@type": "DiscussionForumPosting",
     "name": `Grupos do Telegram - ${category.name}`,
+    "headline": `Grupos do Telegram de ${category.name}`,
     "description": categoryDescription,
     "url": categoryUrl,
-    "mainEntity": {
+    "datePublished": "2024-01-01T00:00:00Z",
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br/sobre"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos", 
+      "url": "https://topgrupostele.com.br"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": categoryUrl
+    },
+    "discussionUrl": `${categoryUrl}#grupos-discussao`,
+    "about": {
+      "@type": "Thing",
+      "name": category.name,
+      "description": category.description
+    },
+    "hasPart": {
       "@type": "ItemList",
       "name": `Grupos de ${category.name}`,
       "numberOfItems": totalFilteredGroups,
@@ -215,13 +238,23 @@ const Categoria = () => {
         "@type": "ListItem",
         "position": index + 1,
         "item": {
-          "@type": "SocialMediaPosting",
+          "@type": "DiscussionForumPosting",
           "name": group.name,
+          "headline": group.name,
           "description": group.description,
           "url": `https://topgrupostele.com.br/grupo/${group.id}`,
+          "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+          "dateModified": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
           "author": {
             "@type": "Organization",
-            "name": "TopGrupos"
+            "name": "TopGrupos",
+            "url": "https://topgrupostele.com.br"
+          },
+          "discussionUrl": `https://topgrupostele.com.br/grupo/${group.id}`,
+          "about": {
+            "@type": "Thing",
+            "name": group.category || category.name,
+            "description": group.description
           }
         }
       }))

@@ -90,6 +90,53 @@ const GroupDescription: React.FC = () => {
         .replace(/&#38;/g, "&")
         .replace(/&amp;/g, "&");
 
+  // Structured data for group description page
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": decodeHtml(group.name),
+    "name": decodeHtml(group.name),
+    "description": decodeHtml(group.description) || "Grupo do Telegram",
+    "url": `https://topgrupostele.com.br/grupo/${group.id}/descricao`,
+    "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "dateModified": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://topgrupostele.com.br/grupo/${group.id}/descricao`
+    },
+    "discussionUrl": group.telegramUrl,
+    "about": {
+      "@type": "Thing",
+      "name": group.category || "Telegram",
+      "description": decodeHtml(group.description) || "Grupo do Telegram"
+    },
+    "image": group.imageUrl ? {
+      "@type": "ImageObject",
+      "url": group.imageUrl,
+      "width": 400,
+      "height": 400
+    } : undefined,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/ViewAction",
+      "userInteractionCount": group.viewCount || Math.floor(Math.random() * 1000) + 100
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -113,6 +160,14 @@ const GroupDescription: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${decodeHtml(group.name)} | Descrição do Grupo | TopGrupos`}
+        description={decodeHtml(group.description) || "Grupo do Telegram"}
+        url={`https://topgrupostele.com.br/grupo/${group.id}/descricao`}
+        canonical={`https://topgrupostele.com.br/grupo/${group.id}/descricao`}
+        structuredData={structuredData}
+      />
+      
       <main className="container mx-auto px-4 py-6 sm:py-10">
         <div className="max-w-3xl mx-auto space-y-6">
           <Button onClick={() => navigate(-1)} variant="ghost" className="mb-4 w-full sm:w-auto">

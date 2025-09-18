@@ -119,6 +119,51 @@ const Busca = () => {
     handleFilterChange();
   };
 
+  // Structured data for search page
+  const searchStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": searchTerm ? `Busca: "${searchTerm}"` : "Buscar Grupos do Telegram",
+    "name": searchTerm ? `Resultados para "${searchTerm}"` : "Busca de Grupos",
+    "description": searchDescription,
+    "url": searchUrl,
+    "datePublished": "2024-01-01T00:00:00Z",
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": searchUrl
+    },
+    "discussionUrl": `${searchUrl}#resultados`,
+    "about": {
+      "@type": "Thing",
+      "name": searchTerm || "Busca de Grupos",
+      "description": "Busca por grupos do Telegram"
+    },
+    "hasPart": filteredGroups.slice(0, 10).map((group, index) => ({
+      "@type": "DiscussionForumPosting",
+      "headline": group.name,
+      "description": group.description,
+      "url": `https://topgrupostele.com.br/grupo/${group.id}`,
+      "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+      "author": {
+        "@type": "Organization",
+        "name": "TopGrupos",
+        "url": "https://topgrupostele.com.br"
+      },
+      "discussionUrl": `https://topgrupostele.com.br/grupo/${group.id}`
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden">
       <SEOHead
@@ -127,6 +172,7 @@ const Busca = () => {
         url={searchUrl}
         canonical={searchUrl}
         noindex={!searchTerm} // Only index search pages with actual search terms
+        structuredData={searchStructuredData}
       />
       
       <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8">

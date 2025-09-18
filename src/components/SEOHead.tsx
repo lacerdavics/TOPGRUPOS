@@ -11,6 +11,7 @@ interface SEOHeadProps {
   noindex?: boolean;
   canonical?: string;
   structuredData?: object;
+  additionalStructuredData?: object[]; // Para múltiplos schemas
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
@@ -22,7 +23,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   type = "website",
   noindex = false,
   canonical,
-  structuredData
+  structuredData,
+  additionalStructuredData = []
 }) => {
   const fullTitle = title.includes('TopGrupos') ? title : `${title} | TopGrupos`;
   
@@ -64,6 +66,13 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
           {JSON.stringify(structuredData)}
         </script>
       )}
+      
+      {/* Additional Structured Data */}
+      {additionalStructuredData.map((schema, index) => (
+        <script key={index} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
   );
 };

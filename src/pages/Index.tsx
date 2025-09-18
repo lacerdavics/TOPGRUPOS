@@ -78,16 +78,52 @@ const Index = memo(() => {
   // Structured data for homepage
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@type": "DiscussionForumPosting",
     "name": "TopGrupos",
-    "url": "https://topgrupostele.com.br",
+    "headline": "Descubra os Melhores Grupos do Telegram no Brasil",
     "description": "A maior plataforma para descobrir grupos do Telegram no Brasil",
+    "url": "https://topgrupostele.com.br",
+    "datePublished": "2024-01-01T00:00:00Z",
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br/sobre",
+      "sameAs": [
+        "https://t.me/topgrupos"
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://topgrupostele.com.br"
+    },
+    "discussionUrl": "https://topgrupostele.com.br#grupos-discussao",
+    "about": {
+      "@type": "Thing",
+      "name": "Grupos do Telegram",
+      "description": "Comunidades e grupos do Telegram organizados por categoria"
+    },
+    "image": {
+      "@type": "ImageObject",
+      "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png",
+      "width": 1200,
+      "height": 630
+    },
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://topgrupostele.com.br/busca?q={search_term_string}",
       "query-input": "required name=search_term_string"
     },
-    "mainEntity": {
+    "hasPart": {
       "@type": "ItemList",
       "name": "Grupos Populares do Telegram",
       "numberOfItems": filteredPopularGroups.length,
@@ -95,13 +131,23 @@ const Index = memo(() => {
         "@type": "ListItem",
         "position": index + 1,
         "item": {
-          "@type": "SocialMediaPosting",
+          "@type": "DiscussionForumPosting",
           "name": group.name,
+          "headline": group.name,
           "description": group.description,
           "url": `https://topgrupostele.com.br/grupo/${group.id}`,
+          "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+          "dateModified": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
           "author": {
             "@type": "Organization",
-            "name": "TopGrupos"
+            "name": "TopGrupos",
+            "url": "https://topgrupostele.com.br"
+          },
+          "discussionUrl": `https://topgrupostele.com.br/grupo/${group.id}`,
+          "about": {
+            "@type": "Thing",
+            "name": group.category || "Telegram",
+            "description": group.description
           }
         }
       }))

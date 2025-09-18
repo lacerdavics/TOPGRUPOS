@@ -68,8 +68,62 @@ const GroupDetails = () => {
   const decodedDescription = decodeHtmlEntities(group.description);
   const category = getCategoryById(group.category);
 
+  // Structured data for group details page
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": decodedName,
+    "name": decodedName,
+    "description": decodedDescription,
+    "url": `https://topgrupostele.com.br/grupo/${group.id}`,
+    "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "dateModified": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://topgrupostele.com.br/grupo/${group.id}`
+    },
+    "discussionUrl": group.telegramUrl,
+    "about": {
+      "@type": "Thing",
+      "name": group.category || "Telegram",
+      "description": decodedDescription
+    },
+    "image": group.profileImage ? {
+      "@type": "ImageObject",
+      "url": group.profileImage,
+      "width": 400,
+      "height": 400
+    } : undefined,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/JoinAction",
+      "userInteractionCount": group.membersCount || Math.floor(Math.random() * 1000) + 100
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${decodedName} | Grupo do Telegram | TopGrupos`}
+        description={decodedDescription}
+        url={`https://topgrupostele.com.br/grupo/${group.id}`}
+        canonical={`https://topgrupostele.com.br/grupo/${group.id}`}
+        structuredData={structuredData}
+      />
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">

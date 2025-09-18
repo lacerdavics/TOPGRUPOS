@@ -85,13 +85,49 @@ export const FAQSection: React.FC<FAQSectionProps> = ({
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": displayFaqs.map(faq => ({
-      "@type": "Question",
-      "name": faq.question,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": faq.answer
+    "@type": "DiscussionForumPosting",
+    "name": "Perguntas Frequentes - TopGrupos",
+    "description": "Discussões e respostas sobre grupos do Telegram",
+    "url": "https://topgrupostele.com.br/#faq",
+    "datePublished": new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "Equipe TopGrupos",
+      "url": "https://topgrupostele.com.br/sobre"
+    },
+    "publisher": {
+      "@type": "Organization", 
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://topgrupostele.com.br/#faq"
+    },
+    "discussionUrl": "https://topgrupostele.com.br/#faq",
+    "about": {
+      "@type": "Thing",
+      "name": "Grupos do Telegram - Perguntas Frequentes",
+      "description": "Respostas para dúvidas comuns sobre grupos do Telegram"
+    },
+    "hasPart": displayFaqs.map((faq, index) => ({
+      "@type": "DiscussionForumPosting",
+      "headline": faq.question,
+      "text": faq.answer,
+      "url": `https://topgrupostele.com.br/#faq-${index + 1}`,
+      "datePublished": new Date().toISOString(),
+      "dateModified": new Date().toISOString(),
+      "author": {
+        "@type": "Organization",
+        "name": "Equipe TopGrupos",
+        "url": "https://topgrupostele.com.br/sobre"
+      },
+      "discussionUrl": `https://topgrupostele.com.br/#faq-${index + 1}`,
+      "about": {
+        "@type": "Thing",
+        "name": faq.category || "Telegram",
+        "description": faq.question
       }
     }))
   };

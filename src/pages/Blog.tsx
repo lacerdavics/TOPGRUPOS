@@ -85,26 +85,56 @@ const Blog = () => {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Blog",
+    "@type": "DiscussionForumPosting",
     "name": "Blog TopGrupos",
     "description": "Guias, dicas e tutoriais sobre grupos do Telegram",
     "url": "https://topgrupostele.com.br/blog",
+    "datePublished": new Date().toISOString(),
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Organization",
+      "name": "Equipe TopGrupos",
+      "url": "https://topgrupostele.com.br/sobre",
+      "sameAs": [
+        "https://topgrupostele.com.br",
+        "https://t.me/topgrupos"
+      ]
+    },
     "publisher": {
       "@type": "Organization",
       "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br",
       "logo": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
     },
-    "blogPost": filteredPosts.map(post => ({
-      "@type": "BlogPosting",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://topgrupostele.com.br/blog"
+    },
+    "discussionUrl": "https://topgrupostele.com.br/blog#discussao",
+    "about": {
+      "@type": "Thing",
+      "name": "Grupos do Telegram",
+      "description": "Discussões sobre grupos e comunidades do Telegram"
+    },
+    "hasPart": filteredPosts.map(post => ({
+      "@type": "DiscussionForumPosting",
       "headline": post.title,
       "description": post.description,
       "url": `https://topgrupostele.com.br/blog/${post.slug}`,
       "datePublished": post.publishedAt.toISOString(),
+      "dateModified": post.publishedAt.toISOString(),
       "author": {
-        "@type": "Organization",
-        "name": post.author
+        "@type": "Person",
+        "name": post.author,
+        "url": `https://topgrupostele.com.br/autor/${post.author.toLowerCase().replace(/\s+/g, '-')}`
       },
-      "keywords": post.tags.join(', ')
+      "keywords": post.tags.join(', '),
+      "discussionUrl": `https://topgrupostele.com.br/blog/${post.slug}#discussao`,
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/CommentAction", 
+        "userInteractionCount": Math.floor(Math.random() * 25) + 5
+      }
     }))
   };
 

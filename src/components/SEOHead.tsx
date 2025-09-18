@@ -18,7 +18,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   title = "TopGrupos - Descubra os Melhores Grupos do Telegram",
   description = "🚀 Encontre grupos do Telegram organizados por categoria: amizade, namoro, filmes, educação, criptomoedas e mais. Milhares de grupos ativos verificados.",
   keywords = "grupos telegram, telegram grupos, grupos do telegram, comunidades telegram",
-  image = "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png",
+  image = "https://firebasestorage.googleapis.com/v0/b/utm-propria.firebasestorage.app/o/logo%2FGenerated_Image_September_11__2025_-_12_49AM-removebg-preview.png?alt=media&token=0117896e-f785-4f74-a895-6b182e8f741f",
   url = "https://topgrupostele.com.br",
   type = "website",
   noindex = false,

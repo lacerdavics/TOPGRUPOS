@@ -89,7 +89,7 @@ const GroupDetails = () => {
       "url": "https://topgrupostele.com.br",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
+        "url": "https://firebasestorage.googleapis.com/v0/b/utm-propria.firebasestorage.app/o/logo%2FGenerated_Image_September_11__2025_-_12_49AM-removebg-preview.png?alt=media&token=0117896e-f785-4f74-a895-6b182e8f741f"
       }
     },
     "mainEntityOfPage": {

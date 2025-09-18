@@ -190,33 +190,6 @@ const Promover = () => {
         <PromotionFlow />
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 md:py-20 px-4 bg-gradient-to-r from-muted/10 to-card/20">
-        <div className="max-w-6xl mx-auto px-2">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-center mb-8 sm:mb-12 px-2">
-            O que nossos clientes dizem
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 border-border/50 bg-card/70 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="text-2xl">{testimonial.avatar}</div>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="flex text-warning">
-                      {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-current" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-muted-foreground italic">"{testimonial.text}"</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* How it Works Section */}
       <section className="py-12 md:py-20 px-4">

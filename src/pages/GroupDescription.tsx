@@ -8,6 +8,8 @@ import { ExternalLink, Eye, Flag, ArrowLeft, Trash2, Ban, RefreshCw } from "luci
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkIsAdmin } from "@/services/userService";
+import SEOHead from "@/components/SEOHead";
+import { decodeHtmlEntities } from "@/lib/utils";
 
 interface Group {
   id: string;
@@ -17,6 +19,7 @@ interface Group {
   category: string;
   imageUrl?: string;
   viewCount?: number;
+  createdAt?: Date;
 }
 
 const GroupDescription: React.FC = () => {
@@ -31,7 +34,14 @@ const GroupDescription: React.FC = () => {
   useEffect(() => {
     const groupData = localStorage.getItem(`group_${groupId}`);
     if (groupData) {
-      setGroup(JSON.parse(groupData));
+      const parsedGroup = JSON.parse(groupData);
+      // Ensure name is always a string to prevent null errors
+      setGroup({
+        ...parsedGroup,
+        name: parsedGroup.name || 'Grupo sem nome',
+        description: parsedGroup.description || 'Sem descrição disponível',
+        createdAt: parsedGroup.createdAt ? new Date(parsedGroup.createdAt) : undefined
+      });
     } else {
       const name = searchParams.get('name');
       const description = searchParams.get('description');
@@ -43,8 +53,8 @@ const GroupDescription: React.FC = () => {
       if (name && description && telegramUrl && category) {
         setGroup({
           id: groupId || '',
-          name,
-          description,
+          name: name || 'Grupo sem nome',
+          description: description || 'Sem descrição disponível',
           telegramUrl,
           category,
           imageUrl: imageUrl || undefined,
@@ -83,60 +93,6 @@ const GroupDescription: React.FC = () => {
     navigate(`/grupo/${group?.id}/recategorizar?name=${encodeURIComponent(group?.name || '')}&category=${encodeURIComponent(group?.category || '')}`);
   };
 
-  const decodeHtml = (html: string) =>
-    html?.replace(/&#39;/g, "'")
-        .replace(/&#33;/g, "!")
-        .replace(/&#34;/g, '"')
-        .replace(/&#38;/g, "&")
-        .replace(/&amp;/g, "&");
-
-  // Structured data for group description page
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "DiscussionForumPosting",
-    "headline": decodeHtml(group.name),
-    "name": decodeHtml(group.name),
-    "description": decodeHtml(group.description) || "Grupo do Telegram",
-    "url": `https://topgrupostele.com.br/grupo/${group.id}/descricao`,
-    "datePublished": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
-    "dateModified": group.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
-    "author": {
-      "@type": "Organization",
-      "name": "TopGrupos",
-      "url": "https://topgrupostele.com.br"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "TopGrupos",
-      "url": "https://topgrupostele.com.br",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
-      }
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `https://topgrupostele.com.br/grupo/${group.id}/descricao`
-    },
-    "discussionUrl": group.telegramUrl,
-    "about": {
-      "@type": "Thing",
-      "name": group.category || "Telegram",
-      "description": decodeHtml(group.description) || "Grupo do Telegram"
-    },
-    "image": group.imageUrl ? {
-      "@type": "ImageObject",
-      "url": group.imageUrl,
-      "width": 400,
-      "height": 400
-    } : undefined,
-    "interactionStatistic": {
-      "@type": "InteractionCounter",
-      "interactionType": "https://schema.org/ViewAction",
-      "userInteractionCount": group.viewCount || Math.floor(Math.random() * 1000) + 100
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -158,13 +114,60 @@ const GroupDescription: React.FC = () => {
     );
   }
 
+  // Structured data for group description page - only create when group exists
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": decodeHtmlEntities(group?.name || 'Grupo sem nome'),
+    "name": decodeHtmlEntities(group?.name || 'Grupo sem nome'),
+    "description": decodeHtmlEntities(group?.description || 'Sem descrição disponível'),
+    "url": `https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`,
+    "datePublished": group?.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "dateModified": group?.createdAt?.toISOString() || "2024-01-01T00:00:00Z",
+    "author": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TopGrupos",
+      "url": "https://topgrupostele.com.br",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://topgrupostele.com.br/lovable-uploads/b0f3f9b9-09e8-4981-b31b-28d97801c974.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`
+    },
+    "discussionUrl": group?.telegramUrl || '',
+    "about": {
+      "@type": "Thing",
+      "name": group?.category || "Telegram",
+      "description": decodeHtmlEntities(group?.description || 'Sem descrição disponível')
+    },
+    "image": group?.imageUrl ? {
+      "@type": "ImageObject",
+      "url": group.imageUrl,
+      "width": 400,
+      "height": 400
+    } : undefined,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/ViewAction",
+      "userInteractionCount": group?.viewCount || Math.floor(Math.random() * 1000) + 100
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`${decodeHtml(group.name)} | Descrição do Grupo | TopGrupos`}
-        description={decodeHtml(group.description) || "Grupo do Telegram"}
-        url={`https://topgrupostele.com.br/grupo/${group.id}/descricao`}
-        canonical={`https://topgrupostele.com.br/grupo/${group.id}/descricao`}
+        title={`${decodeHtmlEntities(group?.name || 'Grupo sem nome')} | Descrição do Grupo | TopGrupos`}
+        description={decodeHtmlEntities(group?.description || 'Sem descrição disponível')}
+        url={`https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`}
+        canonical={`https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`}
         structuredData={structuredData}
       />
       
@@ -177,11 +180,10 @@ const GroupDescription: React.FC = () => {
 
           <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-lg border space-y-6">
             <div>
-              <h1 className="text-xl sm:text-3xl font-bold leading-tight">{decodeHtml(group.name)}</h1>
+              <h1 className="text-xl sm:text-3xl font-bold leading-tight">{decodeHtmlEntities(group?.name || 'Grupo sem nome')}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-3">
-                <Badge variant="secondary">{group.category}</Badge>
-                    groupId={group.id}
-                {group.viewCount && (
+                <Badge variant="secondary">{group?.category || 'Categoria'}</Badge>
+                {group?.viewCount && (
                   <span className="flex items-center gap-2 text-muted-foreground text-sm">
                     <Eye className="h-4 w-4" />
                     {group.viewCount > 999 ? `${(group.viewCount / 1000).toFixed(1)}k` : group.viewCount.toLocaleString()} visualizações
@@ -190,16 +192,16 @@ const GroupDescription: React.FC = () => {
               </div>
             </div>
 
-            {group.imageUrl && (
+            {group?.imageUrl && (
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
                 <IntelligentGroupImage
                   fallbackImageUrl={group.imageUrl || (group as any).profileImage}
-                  telegramUrl={group.telegramUrl}
-                  groupName={group.name}
-                  alt={group.name}
+                  telegramUrl={group?.telegramUrl || ''}
+                  groupName={group?.name || 'Grupo sem nome'}
+                  alt={group?.name || 'Grupo sem nome'}
                   className="w-full h-full object-cover"
                   priority={true}
-                  groupId={group.id}
+                  groupId={group?.id || ''}
                 />
               </div>
             )}
@@ -207,7 +209,7 @@ const GroupDescription: React.FC = () => {
             <div>
               <h2 className="font-semibold text-lg mb-3">Descrição:</h2>
               <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                {decodeHtml(group.description) || "Sem descrição disponível."}
+                {decodeHtmlEntities(group?.description || 'Sem descrição disponível')}
               </p>
             </div>
 

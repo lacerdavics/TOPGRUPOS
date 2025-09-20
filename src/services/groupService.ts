@@ -50,83 +50,75 @@ const convertFirestoreGroup = (doc: any): Group => {
 
 // Add a new group with automatic approval based on photo
 export const addGroup = async (
-  groupData: Omit<GroupData, 'createdAt' | 'approved' | 'userId' | 'userEmail'> & { 
-    hasCustomPhoto?: boolean 
-  }, 
-  userId: string, 
+  groupData: Omit<GroupData, 'createdAt' | 'approved' | 'userId' | 'userEmail'> & { hasCustomPhoto?: boolean },
+  userId: string,
   userEmail: string | null
 ): Promise<string> => {
   try {
     console.log('🔵 Verificando duplicatas antes de adicionar grupo');
-    console.log('🔵 Dados para verificação:', {
-      category: groupData.category,
-      name: groupData.name,
-      userId: userId
-    });
-    
-    // Check for duplicate groups using category, name, and userId
+
+    // Garantir que valores obrigatórios não sejam undefined ou vazios
+    const category = groupData.category?.trim();
+    const name = groupData.name?.trim();
+    const uid = userId?.trim();
+
+    if (!category || !name || !uid) {
+      throw new Error('Campos obrigatórios para verificação de duplicatas não definidos');
+    }
+
+    console.log('🔵 Dados para verificação:', { category, name, uid });
+
+    // Query de duplicatas segura
     const duplicateQuery = query(
       collection(db, "groups"),
-      where("category", "==", groupData.category),
-      where("name", "==", groupData.name),
-      where("userId", "==", userId)
+      where("category", "==", category),
+      where("name", "==", name),
+      where("userId", "==", uid)
     );
-    
+
     const duplicateSnapshot = await getDocs(duplicateQuery);
-    
     if (!duplicateSnapshot.empty) {
       console.log('🚨 Grupo duplicado encontrado!');
       throw new Error('Grupo já existente no servidor');
     }
-    
+
     console.log('✅ Nenhuma duplicata encontrada, prosseguindo com cadastro');
-    console.log('🔵 addGroup chamado com:', groupData);
-    
-    // Process image conversion to WebP if it's an external URL
+
+    // Processar imagem
     let finalImageUrl = groupData.profileImage;
-    
-    if (groupData.profileImage && (groupData.profileImage.startsWith('http://') || groupData.profileImage.startsWith('https://'))) {
-      console.log('🔄 Convertendo imagem para WebP antes de salvar no Firestore...');
-      
+    if (groupData.profileImage?.startsWith('http://') || groupData.profileImage?.startsWith('https://')) {
+      console.log('🔄 Convertendo imagem para WebP...');
       const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const conversionResult = await webpConversionService.convertAndUploadToWebP(
-        groupData.profileImage, 
-        tempGroupId
-      );
-      
+      const conversionResult = await webpConversionService.convertAndUploadToWebP(groupData.profileImage, tempGroupId);
       if (conversionResult.success && conversionResult.webpUrl) {
         finalImageUrl = conversionResult.webpUrl;
-        console.log('✅ Imagem convertida para WebP e salva no Firebase Storage:', finalImageUrl);
+        console.log('✅ Imagem convertida para WebP:', finalImageUrl);
       } else {
-        console.warn('⚠️ Falha na conversão WebP, usando URL original da API como fallback:', conversionResult.error);
+        console.warn('⚠️ Falha na conversão WebP, usando URL original:', conversionResult.error);
         finalImageUrl = groupData.profileImage;
       }
     }
-    
-    // Determine approval status based on photo presence
+
     const approved = groupData.hasCustomPhoto === true;
-    
-    console.log(`🔍 Status de aprovação: ${approved ? 'APROVADO' : 'PENDENTE'} - Foto personalizada: ${groupData.hasCustomPhoto}`);
-    
-    const { hasCustomPhoto, ...dataToSave } = groupData; // Remove hasCustomPhoto from saved data
-    
-    // Create complete data with all required fields for Firestore rules
+    console.log(`🔍 Status de aprovação: ${approved ? 'APROVADO' : 'PENDENTE'}`);
+
+    const { hasCustomPhoto, ...dataToSave } = groupData;
+
     const completeData = {
       ...dataToSave,
       profileImage: finalImageUrl,
       createdAt: Timestamp.now(),
-      approved: approved,
-      userId: userId, // Campo obrigatório
-      userEmail: userEmail, // Campo obrigatório
-      createdBy: userId,
+      approved,
+      userId: uid,
+      userEmail,
+      createdBy: uid,
       viewCount: 0,
       membersCount: 0
     };
-    
+
     const docRef = await addDoc(collection(db, "groups"), completeData);
-    
-    console.log(`🟢 Documento adicionado com ID: ${docRef.id} - Status: ${approved ? 'APROVADO' : 'PENDENTE'}`);
-    
+    console.log(`🟢 Documento adicionado com ID: ${docRef.id}`);
+
     return docRef.id;
   } catch (error) {
     console.error("🔴 Erro detalhado ao adicionar grupo: ", error);

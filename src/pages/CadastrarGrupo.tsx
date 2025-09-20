@@ -121,16 +121,19 @@ const CadastrarGrupo = () => {
 
         // Prepare group data
         const groupData = {
-          name: decodeHtmlEntities(title),
-          description: finalDescription,
-          category: category,
-          telegramUrl: url,
+          name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
+          description: formData.description,
+          category: formData.category,
+          telegramUrl: formData.telegramUrl,
           profileImage: finalImageUrl,
           membersCount: 0,
           userId: currentUser.uid,
           userEmail: currentUser.email,
-          hasCustomPhoto: Boolean(groupInfo.has_custom_image)
+          hasCustomPhoto: hasCustomPhoto,
+          createdAt: new Date(),    // necessário para a regra
+          approved: true             // ou false, dependendo se backend decide
         };
+
 
         // Save to Firestore using the same service
         const docId = await addGroup(groupData);

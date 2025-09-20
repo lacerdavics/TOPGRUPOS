@@ -492,15 +492,18 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     }
 
-    const groupData = {
-      name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
-      description: formData.description,
-      category: formData.category,
-      telegramUrl: formData.telegramUrl,
-      profileImage: finalImageUrl,
-      membersCount: 0,
-      hasCustomPhoto: hasCustomPhoto
-    };
+      const groupData = {
+        name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
+        description: formData.description,
+        category: formData.category,
+        telegramUrl: formData.telegramUrl,
+        profileImage: finalImageUrl,
+        membersCount: 0,
+        hasCustomPhoto: hasCustomPhoto,
+        createdAt: new Date(),   // ← obrigatório
+        approved: true           // ← ou false, dependendo da lógica do backend
+      };
+
 
     console.log('🔵 Dados que serão enviados:', groupData);
 

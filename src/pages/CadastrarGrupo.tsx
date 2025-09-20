@@ -509,6 +509,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // ✅ Passando userId e userEmail corretamente para o addGroup
     const docId = await addGroup(groupData, currentUser.uid, currentUser.email);
+
     console.log('🟢 Grupo salvo com sucesso! ID:', docId);
 
     setIsSubmitted(true);

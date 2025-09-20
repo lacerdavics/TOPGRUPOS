@@ -423,139 +423,119 @@ const CadastrarGrupo = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    console.log('🔵 Iniciando submit do formulário');
-    console.log('🔵 Usuário atual:', currentUser);
-    
-    // Check authentication before submitting
-    if (!currentUser) {
-      console.log('🔴 Usuário não autenticado');
-      navigate('/auth?redirect=/cadastrar');
-      return;
-    }
-    
-    // Validar novamente se é link do Telegram
-    if (!validateTelegramUrl(formData.telegramUrl)) {
-      console.log('🔴 URL do Telegram inválida');
-      toast({
-        title: "Link inválido",
-        description: "Por favor, insira um link válido do Telegram.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Verificar se todos os campos obrigatórios estão preenchidos
-    if (!formData.telegramUrl || !formData.category || !formData.description || !formData.groupName) {
-      console.log('🔴 Campos obrigatórios faltando');
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios incluindo o nome do grupo.",
-        variant: "destructive",
-      });
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  console.log('🔵 Iniciando submit do formulário');
+  console.log('🔵 Usuário atual:', currentUser);
 
-    // Verificar se o grupo tem foto personalizada do Telegram (não aceitar foto padrão)
-    if (!hasCustomPhoto) {
-      console.log('🔴 Grupo sem foto personalizada do Telegram');
-      setShowPhotoRetryButton(true);
-      toast({
-        title: "Foto do Telegram obrigatória",
-        description: "Não aceitamos grupos/canais sem foto personalizada. Atualize a foto no Telegram e clique em 'Já atualizei a foto'.",
-        variant: "destructive",
-      });
-      return;
-    }
+  if (!currentUser) {
+    console.log('🔴 Usuário não autenticado');
+    navigate('/auth?redirect=/cadastrar');
+    return;
+  }
 
-    console.log('🔵 Dados do formulário:', formData);
-    setIsLoading(true);
-    
-    try {
-      console.log('🔵 Processando imagem e salvando grupo...');
-      
-      // First, generate a temporary ID for the group to use in image naming
-      const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      let finalImageUrl = formData.profileImage;
-      
-      // If there's an external image URL, download and upload to Firebase Storage
-      if (formData.profileImage && (formData.profileImage.startsWith('http://') || formData.profileImage.startsWith('https://'))) {
-        console.log('🔄 Baixando e fazendo upload da imagem para Firebase Storage...');
-        
-        toast({
-          title: "🔄 Processando imagem...",
-          description: "Fazendo upload da imagem para otimizar o carregamento",
-        });
-        
-        const uploadResult = await imageUploadService.downloadAndUploadImage(formData.profileImage, tempGroupId);
-        
-        if (uploadResult.success && uploadResult.url) {
-          finalImageUrl = uploadResult.url;
-          console.log('✅ Imagem salva no Firebase Storage:', finalImageUrl);
-        } else {
-          console.warn('⚠️ Falha no upload da imagem, usando URL original:', uploadResult.error);
-          // Continue with original URL as fallback
-        }
-      }
-      
-      const groupData = {
-        name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
-        description: formData.description,
-        category: formData.category,
-        telegramUrl: formData.telegramUrl,
-        profileImage: finalImageUrl,
-        membersCount: 0,
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        hasCustomPhoto: hasCustomPhoto
-      };
-      
-      console.log('🔵 Dados que serão enviados:', groupData);
-      
-      const docId = await addGroup(groupData);
-      console.log('🟢 Grupo salvo com sucesso! ID:', docId);
+  if (!validateTelegramUrl(formData.telegramUrl)) {
+    console.log('🔴 URL do Telegram inválida');
+    toast({
+      title: "Link inválido",
+      description: "Por favor, insira um link válido do Telegram.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-      setIsSubmitted(true);
-      
-      // Show different messages based on approval status
-      if (hasCustomPhoto) {
-        toast({
-          title: "✅ Grupo aprovado automaticamente!",
-          description: "Seu grupo tem foto personalizada e foi aprovado. Já está disponível na plataforma!",
-        });
+  if (!formData.telegramUrl || !formData.category || !formData.description || !formData.groupName) {
+    console.log('🔴 Campos obrigatórios faltando');
+    toast({
+      title: "Campos obrigatórios",
+      description: "Por favor, preencha todos os campos obrigatórios incluindo o nome do grupo.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!hasCustomPhoto) {
+    console.log('🔴 Grupo sem foto personalizada do Telegram');
+    setShowPhotoRetryButton(true);
+    toast({
+      title: "Foto do Telegram obrigatória",
+      description: "Não aceitamos grupos/canais sem foto personalizada. Atualize a foto no Telegram e clique em 'Já atualizei a foto'.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  console.log('🔵 Dados do formulário:', formData);
+  setIsLoading(true);
+
+  try {
+    console.log('🔵 Processando imagem e salvando grupo...');
+
+    const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let finalImageUrl = formData.profileImage;
+
+    if (formData.profileImage && (formData.profileImage.startsWith('http://') || formData.profileImage.startsWith('https://'))) {
+      console.log('🔄 Baixando e fazendo upload da imagem para Firebase Storage...');
+      toast({ title: "🔄 Processando imagem...", description: "Fazendo upload da imagem para otimizar o carregamento" });
+
+      const uploadResult = await imageUploadService.downloadAndUploadImage(formData.profileImage, tempGroupId);
+
+      if (uploadResult.success && uploadResult.url) {
+        finalImageUrl = uploadResult.url;
+        console.log('✅ Imagem salva no Firebase Storage:', finalImageUrl);
       } else {
-        toast({
-          title: "📝 Grupo enviado para análise",
-          description: "Grupo sem foto personalizada precisa de aprovação manual. Será analisado em breve.",
-        });
+        console.warn('⚠️ Falha no upload da imagem, usando URL original:', uploadResult.error);
       }
-      
-    } catch (error) {
-      console.log('🔴 Erro ao salvar grupo:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      
-      // Verificar se é erro de grupo duplicado
-      if (errorMessage.includes("já existente") || errorMessage.includes("duplicado")) {
-        toast({
-          title: "❌ Grupo já cadastrado",
-          description: "Este grupo já foi cadastrado anteriormente na plataforma. Cada grupo pode ser cadastrado apenas uma vez.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao cadastrar grupo",
-          description: "Tente novamente em alguns instantes.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    const groupData = {
+      name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
+      description: formData.description,
+      category: formData.category,
+      telegramUrl: formData.telegramUrl,
+      profileImage: finalImageUrl,
+      membersCount: 0,
+      hasCustomPhoto: hasCustomPhoto
+    };
+
+    console.log('🔵 Dados que serão enviados:', groupData);
+
+    // ✅ Passando userId e userEmail corretamente para o addGroup
+    const docId = await addGroup(groupData, currentUser.uid, currentUser.email);
+    console.log('🟢 Grupo salvo com sucesso! ID:', docId);
+
+    setIsSubmitted(true);
+
+    toast({
+      title: hasCustomPhoto ? "✅ Grupo aprovado automaticamente!" : "📝 Grupo enviado para análise",
+      description: hasCustomPhoto
+        ? "Seu grupo tem foto personalizada e foi aprovado. Já está disponível na plataforma!"
+        : "Grupo sem foto personalizada precisa de aprovação manual. Será analisado em breve.",
+    });
+
+  } catch (error) {
+    console.log('🔴 Erro ao salvar grupo:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
+    if (errorMessage.includes("já existente") || errorMessage.includes("duplicado")) {
+      toast({
+        title: "❌ Grupo já cadastrado",
+        description: "Este grupo já foi cadastrado anteriormente na plataforma. Cada grupo pode ser cadastrado apenas uma vez.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Erro ao cadastrar grupo",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   // Show loading if user authentication is being checked
   if (!currentUser) {

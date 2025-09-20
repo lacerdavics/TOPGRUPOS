@@ -49,13 +49,19 @@ const convertFirestoreGroup = (doc: any): Group => {
 };
 
 // Add a new group with automatic approval based on photo
-export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approved'> & { hasCustomPhoto?: boolean }, userId?: string): Promise<string> => {
+export const addGroup = async (
+  groupData: Omit<GroupData, 'createdAt' | 'approved' | 'userId' | 'userEmail'> & { 
+    hasCustomPhoto?: boolean 
+  }, 
+  userId: string, 
+  userEmail: string | null
+): Promise<string> => {
   try {
     console.log('🔵 Verificando duplicatas antes de adicionar grupo');
     console.log('🔵 Dados para verificação:', {
       category: groupData.category,
       name: groupData.name,
-      userId: groupData.userId
+      userId: userId
     });
     
     // Check for duplicate groups using category, name, and userId
@@ -63,7 +69,7 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
       collection(db, "groups"),
       where("category", "==", groupData.category),
       where("name", "==", groupData.name),
-      where("userId", "==", groupData.userId || userId || 'anonymous')
+      where("userId", "==", userId)
     );
     
     const duplicateSnapshot = await getDocs(duplicateQuery);
@@ -74,7 +80,6 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
     }
     
     console.log('✅ Nenhuma duplicata encontrada, prosseguindo com cadastro');
-    
     console.log('🔵 addGroup chamado com:', groupData);
     
     // Process image conversion to WebP if it's an external URL
@@ -87,7 +92,6 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
       const conversionResult = await webpConversionService.convertAndUploadToWebP(
         groupData.profileImage, 
         tempGroupId
-        // Não há imagem antiga para excluir no cadastro inicial
       );
       
       if (conversionResult.success && conversionResult.webpUrl) {
@@ -95,7 +99,6 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
         console.log('✅ Imagem convertida para WebP e salva no Firebase Storage:', finalImageUrl);
       } else {
         console.warn('⚠️ Falha na conversão WebP, usando URL original da API como fallback:', conversionResult.error);
-        // Fallback: manter a URL original da API
         finalImageUrl = groupData.profileImage;
       }
     }
@@ -107,14 +110,20 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
     
     const { hasCustomPhoto, ...dataToSave } = groupData; // Remove hasCustomPhoto from saved data
     
-    const docRef = await addDoc(collection(db, "groups"), {
+    // Create complete data with all required fields for Firestore rules
+    const completeData = {
       ...dataToSave,
-      profileImage: finalImageUrl, // Use the processed image URL
+      profileImage: finalImageUrl,
       createdAt: Timestamp.now(),
       approved: approved,
-      createdBy: userId || 'anonymous',
-      viewCount: 0
-    });
+      userId: userId, // Campo obrigatório
+      userEmail: userEmail, // Campo obrigatório
+      createdBy: userId,
+      viewCount: 0,
+      membersCount: 0
+    };
+    
+    const docRef = await addDoc(collection(db, "groups"), completeData);
     
     console.log(`🟢 Documento adicionado com ID: ${docRef.id} - Status: ${approved ? 'APROVADO' : 'PENDENTE'}`);
     
@@ -126,7 +135,12 @@ export const addGroup = async (groupData: Omit<GroupData, 'createdAt' | 'approve
 };
 
 // Add a new group already approved (used for admin batch import)
-export const addGroupApproved = async (groupData: Omit<GroupData, 'createdAt' | 'approved'>): Promise<string> => {
+export const addGroupApproved = async (
+  groupData: Omit<GroupData, 'createdAt' | 'approved'> & {
+    userId: string;
+    userEmail: string | null;
+  }
+): Promise<string> => {
   try {
     console.log('🔵 addGroupApproved chamado com:', {
       ...groupData,
@@ -143,7 +157,6 @@ export const addGroupApproved = async (groupData: Omit<GroupData, 'createdAt' | 
       const conversionResult = await webpConversionService.convertAndUploadToWebP(
         groupData.profileImage, 
         tempGroupId
-        // Não há imagem antiga para excluir no upload admin
       );
       
       if (conversionResult.success && conversionResult.webpUrl) {
@@ -155,14 +168,18 @@ export const addGroupApproved = async (groupData: Omit<GroupData, 'createdAt' | 
       }
     }
     
-    // Ensure required fields are present for Firebase rules
+    // Ensure all required fields are present for Firebase rules
     const completeGroupData = {
       ...groupData,
-      profileImage: finalImageUrl, // Use the processed image URL
+      profileImage: finalImageUrl,
       createdAt: Timestamp.now(),
       approved: true,
       createdBy: groupData.userId || 'admin-upload',
-      viewCount: (groupData as any).viewCount || 0
+      viewCount: (groupData as any).viewCount || 0,
+      membersCount: groupData.membersCount || 0,
+      // Campos obrigatórios garantidos pela interface
+      userId: groupData.userId,
+      userEmail: groupData.userEmail
     };
     
     console.log('🔵 Dados completos para salvar:', completeGroupData);

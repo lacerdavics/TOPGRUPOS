@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useMobileToast } from "@/hooks/useMobileToast";
 
 const AuthDebugTest = () => {
   const [testing, setTesting] = useState(false);
   const { register, login } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useMobileToast();
 
   const testEmail = "test@example.com";
   const testPassword = "123456";

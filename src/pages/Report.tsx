@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { submitReport } from "@/services/reportService";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 

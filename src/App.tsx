@@ -1,5 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -15,7 +14,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 // Pages
 import Index from "./pages/Index";
 import CadastrarGrupo from "./pages/CadastrarGrupo";
-import EditarGrupo from "./pages/EditarGrupo"; // Novo
+import EditarGrupo from "./pages/EditarGrupo";
 import Categoria from "./pages/Categoria";
 import Busca from "./pages/Busca";
 import Sobre from "./pages/Sobre";
@@ -49,7 +48,7 @@ const AppContent = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
-        {/* Header for mobile and tablet */}
+        {/* Header para mobile e tablet */}
         {(isMobile || isTablet) && (
           <header className="fixed top-0 left-0 right-0 z-[60] h-16 flex items-center justify-between px-4 bg-background/95 backdrop-blur-sm border-b border-border/50">
             <SidebarTrigger className="h-10 w-10 p-2 hover:bg-accent/50 rounded-lg transition-colors" />
@@ -65,7 +64,7 @@ const AppContent = () => {
         <main className={`flex-1 ${(isMobile || isTablet) ? 'pt-16' : 'ml-60'}`}>
           <ScrollToTop />
           <Routes>
-            {/* Public Pages */}
+            {/* Páginas públicas */}
             <Route path="/" element={<Index />} />
             <Route path="/categoria/:categoryId" element={<Categoria />} />
             <Route path="/busca" element={<Busca />} />
@@ -77,9 +76,9 @@ const AppContent = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/confirmation" element={<Confirmation />} />
 
-            {/* Group Routes */}
+            {/* Rotas de grupos */}
             <Route path="/cadastrar" element={<CadastrarGrupo />} />
-            <Route path="/editar-grupo/:groupId" element={<EditarGrupo />} /> {/* Novo */}
+            <Route path="/editar-grupo/:groupId" element={<EditarGrupo />} />
             <Route path="/grupo/:groupId" element={<GroupDetails />} />
             <Route path="/grupo/:groupId/descricao" element={<GroupDescription />} />
             <Route path="/grupo/:groupId/apagar" element={<DeleteGroup />} />
@@ -92,14 +91,14 @@ const AppContent = () => {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/upload-banner" element={<UploadBanner />} />
 
-            {/* Blog Routes */}
+            {/* Blog */}
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
 
-            {/* Age Verification */}
+            {/* Verificação de idade */}
             <Route path="/verificacao-idade" element={<AgeVerification />} />
 
-            {/* Catch-all */}
+            {/* Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
@@ -114,7 +113,6 @@ const App = () => (
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
           <BrowserRouter>
             <AppContent />
           </BrowserRouter>

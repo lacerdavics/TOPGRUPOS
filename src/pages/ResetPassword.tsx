@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth } from "@/lib/firebase";
-import { useMobileToast } from "@/hooks/useMobileToast";
+import { toast } from "@/components/ui/sonner";
 import { Lock, ArrowLeft, CheckCircle } from "lucide-react";
 import Footer from "@/components/Footer";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useMobileToast();
   
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -52,10 +51,8 @@ const ResetPassword = () => {
           errorMessage = "Este link é inválido. Verifique se você acessou o link correto.";
         }
         
-        toast({
-          title: "❌ Link inválido",
-          description: errorMessage,
-          variant: "destructive",
+        toast.error("❌ Link inválido", {
+          description: errorMessage
         });
         navigate('/auth');
       } finally {
@@ -68,19 +65,15 @@ const ResetPassword = () => {
 
   const handleResetPassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      toast({
-        title: "Senha inválida",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
+      toast.error("Senha inválida", {
+        description: "A senha deve ter pelo menos 6 caracteres."
       });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Senhas não coincidem",
-        description: "A confirmação de senha deve ser igual à nova senha.",
-        variant: "destructive",
+      toast.error("Senhas não coincidem", {
+        description: "A confirmação de senha deve ser igual à nova senha."
       });
       return;
     }
@@ -92,9 +85,8 @@ const ResetPassword = () => {
     try {
       await confirmPasswordReset(auth, oobCode, newPassword);
       setIsSuccess(true);
-      toast({
-        title: "✅ Senha alterada com sucesso!",
-        description: "Sua senha foi redefinida. Você já pode fazer login.",
+      toast.success("✅ Senha alterada com sucesso!", {
+        description: "Sua senha foi redefinida. Você já pode fazer login."
       });
     } catch (error: any) {
       console.error('Reset password error:', error);
@@ -106,10 +98,8 @@ const ResetPassword = () => {
         errorMessage = "Este link expirou. Solicite um novo link de redefinição.";
       }
       
-      toast({
-        title: "Erro ao redefinir senha",
-        description: errorMessage,
-        variant: "destructive",
+      toast.error("Erro ao redefinir senha", {
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);

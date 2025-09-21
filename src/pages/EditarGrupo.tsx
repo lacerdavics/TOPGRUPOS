@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { categories } from "@/data/categories";
 import { telegramBatchService } from "@/services/telegramBatchService";
 import { imageUploadService } from "@/services/imageUploadService";
@@ -36,7 +36,6 @@ const EditarGrupo = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const { toast } = useToast();
 
   const [group, setGroup] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,10 +72,8 @@ const EditarGrupo = () => {
       const groupSnap = await getDoc(groupRef);
 
       if (!groupSnap.exists()) {
-        toast({
-          title: "Grupo não encontrado",
-          description: "O grupo que você está tentando editar não existe.",
-          variant: "destructive",
+        toast.error("Grupo não encontrado", {
+          description: "O grupo que você está tentando editar não existe."
         });
         navigate('/meus-grupos');
         return;
@@ -90,10 +87,8 @@ const EditarGrupo = () => {
                           currentUser?.email === 'victorlacerdaprods@gmail.com'; // Admin check
 
       if (!userCanEdit) {
-        toast({
-          title: "Acesso negado",
-          description: "Você só pode editar grupos que você mesmo cadastrou.",
-          variant: "destructive",
+        toast.error("Acesso negado", {
+          description: "Você só pode editar grupos que você mesmo cadastrou."
         });
         navigate('/meus-grupos');
         return;
@@ -110,10 +105,8 @@ const EditarGrupo = () => {
 
     } catch (error) {
       console.error("Erro ao carregar grupo:", error);
-      toast({
-        title: "Erro ao carregar grupo",
-        description: "Não foi possível carregar os dados do grupo.",
-        variant: "destructive",
+      toast.error("Erro ao carregar grupo", {
+        description: "Não foi possível carregar os dados do grupo."
       });
       navigate('/meus-grupos');
     } finally {
@@ -127,9 +120,8 @@ const EditarGrupo = () => {
     setUpdating(true);
     
     try {
-      toast({
-        title: "🔄 Atualizando dados...",
-        description: "Buscando informações atualizadas do Telegram",
+      toast.info("🔄 Atualizando dados...", {
+        description: "Buscando informações atualizadas do Telegram"
       });
 
       // Get fresh data from Telegram
@@ -166,19 +158,16 @@ const EditarGrupo = () => {
 
       setFormData(updatedData);
 
-      toast({
-        title: "✅ Dados atualizados!",
-        description: "As informações do grupo foram atualizadas com sucesso.",
+      toast.success("✅ Dados atualizados!", {
+        description: "As informações do grupo foram atualizadas com sucesso."
       });
 
     } catch (error) {
       console.error("Erro ao atualizar dados do Telegram:", error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       
-      toast({
-        title: "❌ Erro ao atualizar",
-        description: errorMessage,
-        variant: "destructive",
+      toast.error("❌ Erro ao atualizar", {
+        description: errorMessage
       });
     } finally {
       setUpdating(false);
@@ -189,19 +178,15 @@ const EditarGrupo = () => {
     if (!group || !groupId) return;
 
     if (!formData.name.trim() || !formData.description.trim() || !formData.category) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
+      toast.error("Campos obrigatórios", {
+        description: "Por favor, preencha todos os campos obrigatórios."
       });
       return;
     }
 
     if (formData.description.length < 100) {
-      toast({
-        title: "Descrição muito curta",
-        description: "A descrição deve ter pelo menos 100 caracteres.",
-        variant: "destructive",
+      toast.error("Descrição muito curta", {
+        description: "A descrição deve ter pelo menos 100 caracteres."
       });
       return;
     }
@@ -218,9 +203,8 @@ const EditarGrupo = () => {
         updatedAt: new Date()
       });
 
-      toast({
-        title: "✅ Grupo atualizado!",
-        description: "As alterações foram salvas com sucesso.",
+      toast.success("✅ Grupo atualizado!", {
+        description: "As alterações foram salvas com sucesso."
       });
 
       // Update local state
@@ -234,10 +218,8 @@ const EditarGrupo = () => {
 
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações. Tente novamente.",
-        variant: "destructive",
+      toast.error("Erro ao salvar", {
+        description: "Não foi possível salvar as alterações. Tente novamente."
       });
     } finally {
       setSaving(false);
@@ -253,19 +235,16 @@ const EditarGrupo = () => {
       const groupRef = doc(db, "groups", groupId);
       await deleteDoc(groupRef);
 
-      toast({
-        title: "✅ Grupo apagado!",
-        description: "O grupo foi removido permanentemente da plataforma.",
+      toast.success("✅ Grupo apagado!", {
+        description: "O grupo foi removido permanentemente da plataforma."
       });
 
       navigate('/meus-grupos');
 
     } catch (error) {
       console.error("Erro ao apagar grupo:", error);
-      toast({
-        title: "Erro ao apagar grupo",
-        description: "Não foi possível apagar o grupo. Tente novamente.",
-        variant: "destructive",
+      toast.error("Erro ao apagar grupo", {
+        description: "Não foi possível apagar o grupo. Tente novamente."
       });
     } finally {
       setDeleting(false);

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
-import { useToast } from "@/hooks/use-toast";
+import { useMobileToast } from "@/hooks/useMobileToast";
 import { sanitizeGroupTitle, truncateTitle } from "@/utils/groupValidation";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useGroupImageEnhancement } from "@/hooks/useAIImageEnhancement";
@@ -29,7 +29,7 @@ interface GroupCardProps {
 }
 
 const GroupCard = ({ group, onGroupUpdate, compact = false }: GroupCardProps) => {
-  const { toast: showToast } = useToast();
+  const { toast: showToast } = useMobileToast();
   const navigate = useNavigate();
 
   // AI-enhanced image

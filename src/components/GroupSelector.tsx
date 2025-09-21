@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Group } from "@/components/GroupCard";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 interface GroupSelectorProps {
@@ -19,7 +19,6 @@ interface GroupSelectorProps {
 
 const GroupSelector = ({ onGroupSelect, onBack }: GroupSelectorProps) => {
   const { currentUser } = useAuth();
-  const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);

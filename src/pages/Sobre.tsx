@@ -3,10 +3,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Target, Shield, Heart, Home } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
 
 const logo = "https://firebasestorage.googleapis.com/v0/b/utm-propria.firebasestorage.app/o/logo%2FGenerated_Image_September_11__2025_-_12_49AM-removebg-preview.png?alt=media&token=0117896e-f785-4f74-a895-6b182e8f741f";
 
 const Sobre = () => {
+  const testToast = () => {
+    toast.success("Toast funcionando 🚀", {
+      description: "Sistema Sonner configurado com sucesso!"
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       
@@ -34,6 +41,13 @@ const Sobre = () => {
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               O TopGrupos é a maior plataforma para descobrir e conectar-se com comunidades incríveis no Telegram.
             </p>
+
+            {/* Test Toast Button */}
+            <div className="mt-8">
+              <Button onClick={testToast} variant="outline" className="gap-2">
+                🧪 Testar Toast Sonner
+              </Button>
+            </div>
           </div>
 
           {/* Mission Section */}

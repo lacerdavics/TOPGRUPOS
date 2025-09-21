@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Users, CheckCircle } from "lucide-react";
 import { Group } from "@/components/GroupCard";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { usePromotionPlans } from "@/hooks/usePromotionPlans";
 
 interface PaymentDisplayProps {
@@ -23,7 +23,6 @@ const PaymentDisplay = ({
   pixCode: initialPixCode,
   onPaymentGenerated 
 }: PaymentDisplayProps) => {
-  const { toast } = useToast();
   const { promoteGroup, plans } = usePromotionPlans();
   const [qrCode, setQrCode] = useState(initialQrCode || '');
   const [pixCode, setPixCode] = useState(initialPixCode || '');

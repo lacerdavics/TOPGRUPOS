@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Upload, Play, Pause, Square, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { telegramBatchService } from '@/services/telegramBatchService';
 import { addGroup } from '@/services/groupService';
@@ -41,7 +41,6 @@ export const BatchUpload = ({ currentUser, onProcessItem }: BatchUploadProps) =>
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
   const processingRef = useRef(false);
 
   const parseFile = async (file: File): Promise<BatchItem[]> => {

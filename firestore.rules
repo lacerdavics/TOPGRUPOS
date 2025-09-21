@@ -1,194 +1,131 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Regras para a coleção de usuários
+
+    // ==============================
+    // USERS
+    // ==============================
     match /users/{userId} {
-      // Usuários podem ler seus próprios dados
-      allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Usuários podem criar seus próprios dados (durante registro)
-      allow create: if request.auth != null && 
-                       request.auth.uid == userId &&
-                       isValidUser(request.resource.data);
-      
-      // Apenas o próprio usuário pode atualizar lastLogin
-      allow update: if request.auth != null && 
-                       request.auth.uid == userId &&
-                       onlyUpdatingLastLogin(request.resource.data, resource.data);
-      
-      // Administradores podem ler todos os usuários
-      allow read: if isAdmin();
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
-    
-    // Regras para a coleção de grupos
+
+    // ==============================
+    // GROUPS
+    // ==============================
     match /groups/{groupId} {
-      // Permitir leitura de grupos aprovados para todos
-      allow read: if resource.data.approved == true;
-      
-      // Administradores podem ler todos os grupos (incluindo não aprovados)
-      allow read: if isAdmin();
-      
-      // Permitir criação de novos grupos apenas para usuários autenticados
-      allow create: if request.auth != null && 
-                       isValidGroup(request.resource.data);
-      
-      // Apenas administradores podem aprovar/editar/deletar grupos
-      allow update, delete: if isAdmin();
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && isValidGroup();
+
+      // update ainda precisa validar dados
+      allow update: if request.auth != null
+        && (resource.data.userId == request.auth.uid || isAdmin())
+        && isValidGroup();
+
+      // Allow auto image update service to update specific fields
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']);
+
+      // delete não precisa validar dados, só verificar dono ou admin
+      allow delete: if request.auth != null
+        && (resource.data.userId == request.auth.uid || isAdmin());
     }
-    
-    // Função para validar dados do usuário
-    function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'isAdmin', 'createdAt']) &&
-             data.uid is string &&
-             data.email is string &&
-             data.isAdmin == false && // Novos usuários sempre não-admin
-             data.uid == request.auth.uid &&
-             data.email == request.auth.token.email;
-    }
-    
-    // Função para validar dados do grupo
-    function isValidGroup(data) {
-      return data.keys().hasAll(['name', 'description', 'category', 'telegramUrl', 'createdAt', 'approved']) &&
-             data.name is string &&
-             data.description is string &&
-             data.category is string &&
-             data.telegramUrl is string &&
-             // Admins podem criar grupos aprovados, usuários normais só não aprovados
-             (data.approved == false || (data.approved == true && isAdmin())) &&
-             // For admin uploads, allow different user IDs or emails
-             (data.userId == null || data.userId == request.auth.uid || (isAdmin() && data.userId is string)) &&
-             (data.userEmail == null || data.userEmail == request.auth.token.email || (isAdmin() && data.userEmail is string));
-    }
-    
-    // Função para verificar atualizações apenas do lastLogin
-    function onlyUpdatingLastLogin(newData, oldData) {
-      return newData.diff(oldData).affectedKeys().hasOnly(['lastLogin']);
-    }
-    
-    // Função para verificar se é admin
+
+    // ==============================
+    // FUNCTIONS
+    // ==============================
     function isAdmin() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
-    
-    // Regras para configurações administrativas
-    match /admin_config/{configId} {
-      // Qualquer um pode ler configurações, apenas administradores podem escrever
+
+    function isValidGroup() {
+      return request.resource.data.name is string
+        && request.resource.data.category is string
+        && request.resource.data.telegramUrl is string
+        && request.resource.data.profileImage is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.hasCustomPhoto is bool
+        && request.resource.data.membersCount is int
+        && request.resource.data.approved is bool
+        &&
+        (
+          // Caso 1: grupo aprovado (admin OU usuário comum com foto personalizada)
+          (request.resource.data.approved == true
+            && (isAdmin() || request.resource.data.hasCustomPhoto == true))
+          ||
+          // Caso 2: grupo pendente (qualquer usuário pode criar)
+          request.resource.data.approved == false
+        );
+    }
+
+    // ==============================
+    // REPORTS
+    // ==============================
+    match /reports/{reportId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.groupId is string
+        && request.resource.data.reason is string
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    // ==============================
+    // STATS
+    // ==============================
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // ==============================
+    // IMAGE CACHE
+    // ==============================
+    match /imageCache/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
-    // Regras para analytics de visitas
+
+    // ==============================
+    // NOTIFICATIONS
+    // ==============================
+    match /notifications/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ==============================
+    // POPULAR GROUPS
+    // ==============================
+    match /popularGroups/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==============================
+    // PROMOTIONS
+    // ==============================
+    match /promotions/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==============================
+    // BANNERS
+    // ==============================
+    match /banners/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==============================
+    // VISITS
+    // ==============================
     match /visits/{visitId} {
-      // Qualquer um pode criar visitas (para tracking)
       allow create: if true;
-      
-      // Apenas admins podem ler visitas
-      allow read: if isAdmin();
-    }
-    
-    // Regras para estatísticas diárias
-    match /dailyStats/{date} {
-      // Qualquer um pode criar/atualizar (para incremento automático)
-      allow create, update: if true;
-      
-      // Apenas admins podem ler
-      allow read: if isAdmin();
-    }
-    
-    // Regras para reports/denúncias
-    match /reports/{reportId} {
-      // Qualquer um pode criar reports
-      allow create: if request.auth != null;
-      
-      // Apenas admins podem ler e atualizar reports
-      allow read, update: if isAdmin();
-    }
-    
-    // Regras para a coleção de cache de imagens
-    match /image_cache/{imageId} {
-      // Permite leitura pública das imagens cached
-      allow read: if true;
-      
-      // Permite escrita para criar novos caches
-      // Valida que os campos obrigatórios estão presentes
-      allow create: if request.resource.data.keys().hasAll(['originalUrl', 'firebaseUrl', 'cachedAt'])
-        && request.resource.data.originalUrl is string
-        && request.resource.data.firebaseUrl is string
-        && request.resource.data.cachedAt is number;
-      
-      // Permite atualização apenas se o documento já existe
-      allow update: if resource != null;
-      
-      // Não permite exclusão para manter cache
-      allow delete: if false;
-    }
-    
-    // Regras para notificações de links expirados
-    match /expired_link_notifications/{notificationId} {
-      // Qualquer um pode criar notificações (sistema automático)
-      allow create: if request.resource.data.keys().hasAll(['userEmail', 'groupName', 'groupId', 'telegramUrl', 'createdAt', 'notified'])
-        && request.resource.data.userEmail is string
-        && request.resource.data.groupName is string
-        && request.resource.data.groupId is string
-        && request.resource.data.telegramUrl is string
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.notified is bool;
-      
-      // Usuários podem ler apenas suas próprias notificações
-      allow read: if request.auth != null && 
-                     resource.data.userEmail == request.auth.token.email;
-      
-      // Usuários podem marcar suas próprias notificações como lidas
-      allow update: if request.auth != null && 
-                      resource.data.userEmail == request.auth.token.email &&
-                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notified', 'notifiedAt']);
-      
-      // Administradores podem ler e modificar todas as notificações
-      allow read, update: if isAdmin();
-    }
-    
-    // Regras para configurações de grupos populares gerais
-    match /generalPopularGroups/{configId} {
-      // Permitir leitura pública para exibir grupos populares
-      allow read: if true;
-      
-      // Apenas administradores podem gerenciar configurações
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // Regras para configurações de grupos populares por categoria
-    match /popularGroupsConfig/{configId} {
-      // Permitir leitura pública para exibir grupos populares
-      allow read: if true;
-      
-      // Apenas administradores podem gerenciar configurações
-      allow create, update, delete: if isAdmin();
-    }
-    
-    // Regras para grupos promovidos
-    match /promotedGroups/{documentId} {
-      // Usuários autenticados podem criar promoções
-      allow create: if request.auth != null;
-      
-      // Usuários podem ler suas próprias promoções
-      allow read: if request.auth != null && 
-                     resource.data.userId == request.auth.uid;
-      
-      // Administradores podem ler e modificar todas as promoções
-      allow read, update, delete: if isAdmin();
-    }
-    
-    // Regras para banners publicitários
-    match /banners/{bannerId} {
-      // Qualquer um pode ler banners (para exibir publicidade)
-      allow read: if true;
-      
-      // Apenas administradores podem criar, atualizar e deletar banners
-      allow create, update, delete: if isAdmin();
     }
   }
 }

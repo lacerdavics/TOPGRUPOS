@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMobileToast } from "@/hooks/useMobileToast";
+import { toast } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Lock, UserPlus, LogIn, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
@@ -16,17 +16,14 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
   const { login, register, resetPassword } = useAuth();
-  const { toast } = useMobileToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
 
   const handleSubmit = async (isLogin: boolean) => {
     if (!email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha email e senha.",
-        variant: "destructive",
+      toast.error("Campos obrigatórios", {
+        description: "Por favor, preencha email e senha."
       });
       return;
     }
@@ -36,15 +33,13 @@ const Auth = () => {
     try {
       if (isLogin) {
         await login(email, password);
-        toast({
-          title: "✅ Login realizado com sucesso!",
-          description: "Bem-vindo de volta! Redirecionando...",
+        toast.success("✅ Login realizado com sucesso!", {
+          description: "Bem-vindo de volta! Redirecionando..."
         });
       } else {
         await register(email, password);
-        toast({
-          title: "✅ Conta criada e login automático!",
-          description: "Sua conta foi criada e você já está logado!",
+        toast.success("✅ Conta criada e login automático!", {
+          description: "Sua conta foi criada e você já está logado!"
         });
       }
       
@@ -71,10 +66,8 @@ const Auth = () => {
         errorMessage = "⏱️ Limite de tentativas atingido. Aguarde alguns minutos ou redefina sua senha para acesso imediato.";
       }
       
-      toast({
-        title: "❌ Erro na autenticação",
-        description: errorMessage,
-        variant: "destructive",
+      toast.error("❌ Erro na autenticação", {
+        description: errorMessage
       });
       console.log('📢 Toast: Toast chamado com:', errorMessage);
     } finally {
@@ -84,10 +77,8 @@ const Auth = () => {
 
   const handleResetPassword = async () => {
     if (!resetEmail) {
-      toast({
-        title: "Email obrigatório",
-        description: "Por favor, informe seu email para recuperar a senha.",
-        variant: "destructive",
+      toast.error("Email obrigatório", {
+        description: "Por favor, informe seu email para recuperar a senha."
       });
       return;
     }
@@ -96,9 +87,8 @@ const Auth = () => {
     
     try {
       await resetPassword(resetEmail);
-      toast({
-        title: "✅ Email enviado com sucesso!",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      toast.success("✅ Email enviado com sucesso!", {
+        description: "Verifique sua caixa de entrada para redefinir sua senha."
       });
       setResetEmail("");
       setIsResetMode(false);
@@ -111,10 +101,8 @@ const Auth = () => {
         errorMessage = "❌ Email inválido! Verifique o formato do email.";
       }
       
-      toast({
-        title: "Erro ao enviar email",
-        description: errorMessage,
-        variant: "destructive",
+      toast.error("Erro ao enviar email", {
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);

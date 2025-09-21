@@ -160,6 +160,8 @@ const Index = memo(() => {
         description="🚀 Encontre grupos do Telegram organizados por categoria: amizade, namoro, filmes, educação, criptomoedas e mais. +500 grupos ativos verificados. Cadastre seu grupo grátis!"
         keywords="grupos telegram, telegram grupos, grupos do telegram, comunidades telegram, grupos telegram brasil, telegram channels, grupos telegram amizade, grupos telegram namoro, grupos telegram filmes, grupos telegram educação, grupos telegram criptomoedas, cadastrar grupo telegram, promover grupo telegram"
         url="https://topgrupostele.com.br"
+        canonical="https://topgrupostele.com.br"
+        robots="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
         structuredData={structuredData}
       />
       

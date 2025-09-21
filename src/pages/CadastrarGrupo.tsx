@@ -602,6 +602,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         keywords="cadastrar grupo telegram, divulgar grupo telegram, promover grupo telegram, crescer grupo telegram, telegram marketing, comunidades telegram"
         url="https://topgrupostele.com.br/cadastrar"
         canonical="https://topgrupostele.com.br/cadastrar"
+        robots="index, follow, max-image-preview:large"
       />
       
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">

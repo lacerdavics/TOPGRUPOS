@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserNotifications, markNotificationAsSent, type ExpiredLinkNotification } from '@/services/expiredLinkNotificationService';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, X, Clock } from 'lucide-react';
@@ -14,17 +14,17 @@ export const ExpiredLinkNotifications = () => {
   const [dismissing, setDismissing] = useState<string | null>(null);
 
   useEffect(() => {
-    if (currentUser?.email) {
+    if (currentUser?.uid) {
       loadNotifications();
     }
-  }, [currentUser?.email]);
+  }, [currentUser?.uid]);
 
   const loadNotifications = async () => {
-    if (!currentUser?.email) return;
+    if (!currentUser?.uid) return;
     
     try {
       setLoading(true);
-      const userNotifications = await getUserNotifications(currentUser.email);
+      const userNotifications = await getUserNotifications(currentUser.uid);
       // Mostrar apenas notificações não lidas dos últimos 30 dias
       const recentNotifications = userNotifications.filter(notif => {
         const daysDiff = (Date.now() - notif.createdAt.getTime()) / (1000 * 60 * 60 * 24);

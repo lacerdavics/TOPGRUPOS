@@ -18,7 +18,7 @@ import { getFakeAnalyticsData, getFakeDailyStats } from "./fakeAnalyticsService"
 
 export interface VisitData {
   id?: string;
-  timestamp: Timestamp;
+  timestamp: Date | Timestamp;
   route: string;
   userAgent?: string;
   ip?: string;
@@ -30,20 +30,23 @@ export interface DailyStats {
   uniqueVisitors: number;
 }
 
+// ==============================
 // Track page visit
+// ==============================
 export const trackVisit = async (route: string): Promise<void> => {
   try {
     const visitData: VisitData = {
       timestamp: Timestamp.now(),
       route,
-      userAgent: navigator.userAgent
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "server"
     };
     
+    // Salva visita bruta
     await addDoc(collection(db, "visits"), visitData);
     
-    // Update daily counter
-    const today = new Date().toISOString().split('T')[0];
-    const dailyRef = doc(db, "dailyStats", today);
+    // Atualiza contador diário (coleção "stats")
+    const today = new Date().toISOString().split("T")[0];
+    const dailyRef = doc(db, "stats", today);
     
     await setDoc(dailyRef, {
       date: today,
@@ -56,7 +59,9 @@ export const trackVisit = async (route: string): Promise<void> => {
   }
 };
 
+// ==============================
 // Track group view
+// ==============================
 export const trackGroupView = async (groupId: string): Promise<void> => {
   try {
     const groupRef = doc(db, "groups", groupId);
@@ -69,30 +74,31 @@ export const trackGroupView = async (groupId: string): Promise<void> => {
   }
 };
 
+// ==============================
 // Get visits analytics (real or fake)
-export const getVisitsAnalytics = async (period: '24h' | '7d' | '30d' = '7d', forceReal: boolean = false) => {
+// ==============================
+export const getVisitsAnalytics = async (
+  period: "24h" | "7d" | "30d" = "7d",
+  forceReal: boolean = false
+) => {
   try {
-    // Check analytics configuration
     const config = await getAnalyticsConfig();
     
-    // If forceReal is true (admin) or config allows real analytics
     if (!forceReal && !config.useRealAnalytics) {
-      // Return fake analytics data
       return getFakeAnalyticsData(period);
     }
 
-    // Real analytics implementation
     const now = new Date();
-    let startDate = new Date();
-    
+    const startDate = new Date();
+
     switch (period) {
-      case '24h':
+      case "24h":
         startDate.setHours(now.getHours() - 24);
         break;
-      case '7d':
+      case "7d":
         startDate.setDate(now.getDate() - 7);
         break;
-      case '30d':
+      case "30d":
         startDate.setDate(now.getDate() - 30);
         break;
     }
@@ -104,23 +110,40 @@ export const getVisitsAnalytics = async (period: '24h' | '7d' | '30d' = '7d', fo
     );
 
     const querySnapshot = await getDocs(q);
-    const visits = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: doc.data().timestamp.toDate()
-    })) as VisitData[];
 
-    // Group by date for chart data
+    const visits = querySnapshot.docs.map(docSnap => {
+      const data = docSnap.data() as any;
+      const ts = data.timestamp;
+      let tsDate: Date;
+
+      if (ts && typeof ts.toDate === "function") {
+        tsDate = ts.toDate();
+      } else if (ts instanceof Date) {
+        tsDate = ts;
+      } else {
+        tsDate = new Date(ts);
+      }
+
+      return {
+        id: docSnap.id,
+        ...data,
+        timestamp: tsDate
+      } as VisitData;
+    });
+
+    // Agrupa por data normalizada
     const dailyVisits: { [key: string]: number } = {};
     visits.forEach(visit => {
-      const date = new Date(visit.timestamp.seconds * 1000).toISOString().split('T')[0];
+      const date = visit.timestamp.toISOString().split("T")[0];
       dailyVisits[date] = (dailyVisits[date] || 0) + 1;
     });
 
-    const chartData = Object.entries(dailyVisits).map(([date, count]) => ({
-      date,
-      visits: count
-    })).sort((a, b) => a.date.localeCompare(b.date));
+    const chartData = Object.entries(dailyVisits)
+      .map(([date, count]) => ({
+        date,
+        visits: count
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     return {
       totalVisits: visits.length,
@@ -133,19 +156,20 @@ export const getVisitsAnalytics = async (period: '24h' | '7d' | '30d' = '7d', fo
   }
 };
 
-// Get daily stats for admin dashboard (real or fake)
-export const getDailyStats = async (days: number = 30, forceReal: boolean = false) => {
+// ==============================
+// Get daily stats for dashboard
+// ==============================
+export const getDailyStats = async (
+  days: number = 30,
+  forceReal: boolean = false
+) => {
   try {
-    // Check analytics configuration
     const config = await getAnalyticsConfig();
     
-    // If forceReal is true (admin) or config allows real analytics
     if (!forceReal && !config.useRealAnalytics) {
-      // Return fake daily stats
       return getFakeDailyStats(days);
     }
 
-    // Real analytics implementation
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - days);
@@ -153,12 +177,12 @@ export const getDailyStats = async (days: number = 30, forceReal: boolean = fals
     const statsArray: DailyStats[] = [];
     
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
-      const docRef = doc(db, "dailyStats", dateStr);
+      const dateStr = d.toISOString().split("T")[0];
+      const docRef = doc(db, "stats", dateStr);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        const data = docSnap.data();
+        const data = docSnap.data() as any;
         statsArray.push({
           date: dateStr,
           visits: data.visits || 0,

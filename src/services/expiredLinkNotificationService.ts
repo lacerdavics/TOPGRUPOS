@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase';
 
 export interface ExpiredLinkNotification {
   id?: string;
-  userEmail: string;
+  userId: string; // trocamos de userEmail → userId (uid do Firebase)
   groupName: string;
   groupId: string;
   telegramUrl: string;
@@ -14,14 +14,14 @@ export interface ExpiredLinkNotification {
 
 // Criar notificação sobre link expirado
 export const createExpiredLinkNotification = async (
-  userEmail: string,
+  userId: string,
   groupName: string,
   groupId: string,
   telegramUrl: string
 ): Promise<void> => {
   try {
     await addDoc(collection(db, 'expired_link_notifications'), {
-      userEmail,
+      userId,
       groupName,
       groupId,
       telegramUrl,
@@ -29,14 +29,14 @@ export const createExpiredLinkNotification = async (
       notified: false
     });
     
-    console.log(`📧 Notificação de link expirado criada para ${userEmail}`);
+    console.log(`📧 Notificação de link expirado criada para userId=${userId}`);
   } catch (error) {
     console.error('❌ Erro ao criar notificação de link expirado:', error);
     throw error;
   }
 };
 
-// Buscar notificações não enviadas
+// Buscar notificações não enviadas (para uso interno, ex: admin/cron jobs)
 export const getPendingNotifications = async (): Promise<ExpiredLinkNotification[]> => {
   try {
     const q = query(
@@ -73,12 +73,12 @@ export const markNotificationAsSent = async (notificationId: string): Promise<vo
   }
 };
 
-// Buscar notificações de um usuário específico
-export const getUserNotifications = async (userEmail: string): Promise<ExpiredLinkNotification[]> => {
+// Buscar notificações de um usuário específico (pelo uid)
+export const getUserNotifications = async (userId: string): Promise<ExpiredLinkNotification[]> => {
   try {
     const q = query(
       collection(db, 'expired_link_notifications'),
-      where('userEmail', '==', userEmail)
+      where('userId', '==', userId)
     );
     
     const querySnapshot = await getDocs(q);

@@ -171,7 +171,7 @@ const Busca = () => {
         description="Busque grupos do Telegram por categoria, nome ou interesse. Milhares de grupos ativos organizados e verificados."
         url={searchUrl}
         canonical={searchUrl}
-        noindex={!searchTerm} // Only index search pages with actual search terms
+        robots={searchTerm ? "index, follow, max-image-preview:large" : "noindex, follow"}
         structuredData={searchStructuredData}
       />
       

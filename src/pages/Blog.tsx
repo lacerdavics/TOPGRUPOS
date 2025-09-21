@@ -146,6 +146,7 @@ const Blog = () => {
         keywords="blog telegram, guias telegram, dicas telegram, como usar telegram, grupos telegram dicas, telegram brasil blog"
         url="https://topgrupos.com/blog"
         canonical="https://topgrupos.com/blog"
+        robots="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
         structuredData={structuredData}
       />
 

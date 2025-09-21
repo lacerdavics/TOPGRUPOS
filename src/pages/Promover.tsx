@@ -103,6 +103,7 @@ const Promover = () => {
         keywords="promover grupo telegram, divulgar grupo telegram, marketing telegram, crescer grupo telegram, membros telegram, publicidade telegram, impulsionar grupo telegram"
         url="https://topgrupostele.com.br/promover"
         canonical="https://topgrupostele.com.br/promover"
+        robots="index, follow, max-image-preview:large"
       />
       
       {/* Hero Section */}

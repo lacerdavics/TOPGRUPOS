@@ -12,6 +12,8 @@ interface SEOHeadProps {
   canonical?: string;
   structuredData?: object;
   additionalStructuredData?: object[]; // Para múltiplos schemas
+  alternateUrls?: { hreflang: string; href: string }[];
+  robots?: string;
 }
 
 export const SEOHead: React.FC<SEOHeadProps> = ({
@@ -24,7 +26,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   noindex = false,
   canonical,
   structuredData,
-  additionalStructuredData = []
+  additionalStructuredData = [],
+  alternateUrls = [],
+  robots
 }) => {
   const fullTitle = title.includes('TopGrupos') ? title : `${title} | TopGrupos`;
   
@@ -37,10 +41,15 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="keywords" content={keywords} />
       
       {/* Robots */}
-      <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large"} />
+      <meta name="robots" content={robots || (noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1")} />
       
       {/* Canonical */}
       {canonical && <link rel="canonical" href={canonical} />}
+      
+      {/* Alternate URLs for different languages/regions */}
+      {alternateUrls.map((alt, index) => (
+        <link key={index} rel="alternate" hrefLang={alt.hreflang} href={alt.href} />
+      ))}
       
       {/* Open Graph */}
       <meta property="og:type" content={type} />
@@ -59,6 +68,16 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+      
+      {/* Additional SEO Meta Tags */}
+      <meta name="author" content="TopGrupos" />
+      <meta name="publisher" content="TopGrupos" />
+      <meta name="copyright" content="© 2025 TopGrupos" />
+      <meta name="language" content="pt-BR" />
+      <meta name="geo.region" content="BR" />
+      <meta name="geo.country" content="Brazil" />
+      <meta name="distribution" content="global" />
+      <meta name="rating" content="general" />
       
       {/* Structured Data */}
       {structuredData && (

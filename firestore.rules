@@ -29,6 +29,10 @@ service cloud.firestore {
       // Allow auto image update service to update specific fields
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']);
 
+      // Allow auto image update service to update specific fields by unauthenticated users
+      // WARNING: This rule allows any unauthenticated user to modify these specific fields on any group.
+      allow update: if request.auth == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']);
+
       // delete não precisa validar dados, só verificar dono ou admin
       allow delete: if request.auth != null
         && (resource.data.userId == request.auth.uid || isAdmin());

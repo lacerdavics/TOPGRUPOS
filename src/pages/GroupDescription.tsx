@@ -173,6 +173,7 @@ const GroupDescription: React.FC = () => {
         description={decodeHtmlEntities(group?.description || 'Sem descrição disponível')}
         url={`https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`}
         canonical={`https://topgrupostele.com.br/grupo/${group?.id || ''}/descricao`}
+        robots="index, follow, max-image-preview:large"
         structuredData={structuredData}
       />
       

@@ -301,6 +301,7 @@ const BlogPost = () => {
         url={`https://topgrupostele.com.br/blog/${post.slug}`}
         canonical={`https://topgrupostele.com.br/blog/${post.slug}`}
         type="article"
+        robots="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
         structuredData={structuredData}
       />
 

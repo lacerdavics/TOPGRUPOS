@@ -122,6 +122,7 @@ const GroupDetails = () => {
         description={decodedDescription}
         url={`https://topgrupostele.com.br/grupo/${group.id}`}
         canonical={`https://topgrupostele.com.br/grupo/${group.id}`}
+        robots="index, follow, max-image-preview:large"
         structuredData={structuredData}
       />
       

@@ -5,7 +5,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://topgrupostele.com.br/</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -13,63 +13,126 @@
   <!-- Categorias -->
   <url>
     <loc>https://topgrupostele.com.br/categoria/amizade</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/namoro</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/filmes-series</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/cidades</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/cursos</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/compra-venda</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/ofertas-cupons</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/ganhar-dinheiro</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/categoria/criptomoedas</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/culinaria-receitas</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/concursos</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/desenhos-animes</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/divulgacao</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/empreendedorismo</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/educacao</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/esportes</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/futebol</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/categoria/sorteios-premiacoes</loc>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -77,37 +140,80 @@
   <!-- Páginas importantes -->
   <url>
     <loc>https://topgrupostele.com.br/cadastrar</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/promover</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/busca</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/sobre</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://topgrupostele.com.br/contato</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2025-01-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/termos</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/privacidade</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- Blog -->
+  <url>
+    <loc>https://topgrupostele.com.br/blog</loc>
+    <lastmod>2025-01-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/blog/como-encontrar-melhores-grupos-telegram-2025</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/blog/grupos-telegram-fazer-amizades-melhores-2025</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://topgrupostele.com.br/blog/grupos-telegram-criptomoedas-guia-investidores</loc>
+    <lastmod>2025-01-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   
 </urlset>

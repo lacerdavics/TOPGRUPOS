@@ -12,8 +12,8 @@ service firebase.storage {
       // Allow write access to authenticated users
       allow write: if request.auth != null;
       
-      // Allow delete access to authenticated users (for updating their own groups)
-      allow delete: if request.auth != null;
+      // Allow delete access for auto image update system
+      allow delete: if true;
     }
     
     // Rules for WebP converted images

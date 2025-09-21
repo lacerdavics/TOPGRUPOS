@@ -80,7 +80,7 @@ class AutoImageUpdateService {
         profileImage: conversionResult.webpUrl,
         imageUpdatedAt: new Date(),
         imageCorrectedAt: new Date(),
-        autoImageCorrected: true
+        autoUpdated: true
       });
 
       console.log('✅ ProfileImage atualizado no Firestore com nova URL WebP');

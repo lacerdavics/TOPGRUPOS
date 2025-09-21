@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { autoImageUpdateService } from '@/services/autoImageUpdateService';
+import { generateFallbackAvatar } from '@/utils/groupValidation';
 
 interface IntelligentGroupImageProps {
   telegramUrl?: string;
@@ -295,10 +296,15 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
     }
 
     // Priority 3: No image found - show empty placeholder
-    console.log('❌ Nenhuma imagem válida encontrada, usando placeholder vazio');
-    setCurrentSrc('');
+    console.log('❌ Nenhuma imagem válida encontrada, gerando avatar fallback');
+    
+    // Generate a proper avatar fallback using the group name
+    const avatarFallback = generateFallbackAvatar(groupName, 800);
+    console.log('🎨 Avatar fallback gerado:', avatarFallback);
+    
+    setCurrentSrc(avatarFallback);
     setIsLoading(false);
-    setHasError(true);
+    setHasError(false); // Not an error - we have a valid fallback
   }, [fallbackImageUrl, telegramUrl, groupName, groupId, testImageLoad, fetchTelegramImage, hasTriggeredUpdate]);
 
   // Initialize image loading

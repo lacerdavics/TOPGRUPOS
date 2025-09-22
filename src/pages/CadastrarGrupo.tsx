@@ -18,6 +18,7 @@ import { decodeHtmlEntities } from "@/lib/utils";
 import { telegramBatchService } from "@/services/telegramBatchService";
 import SEOHead from "@/components/SEOHead";
 import { imageUploadService } from "@/services/imageUploadService";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 
 const CadastrarGrupo = () => {
   const [formData, setFormData] = useState({
@@ -132,7 +133,6 @@ const CadastrarGrupo = () => {
           createdAt: new Date(),    // necessário para a regra
           approved: true             // ou false, dependendo se backend decide
         };
-
 
         // Save to Firestore using the same service
         const docId = await addGroup(groupData);
@@ -412,67 +412,67 @@ const CadastrarGrupo = () => {
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  console.log('🔵 Iniciando submit do formulário');
-  console.log('🔵 Usuário atual:', currentUser);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    console.log('🔵 Iniciando submit do formulário');
+    console.log('🔵 Usuário atual:', currentUser);
 
-  if (!currentUser) {
-    console.log('🔴 Usuário não autenticado');
-    navigate('/auth?redirect=/cadastrar');
-    return;
-  }
-
-  if (!validateTelegramUrl(formData.telegramUrl)) {
-    console.log('🔴 URL do Telegram inválida');
-    toast.error("Link inválido", {
-      description: "Por favor, insira um link válido do Telegram."
-    });
-    return;
-  }
-
-  if (!formData.telegramUrl || !formData.category || !formData.description || !formData.groupName) {
-    console.log('🔴 Campos obrigatórios faltando');
-    toast.error("Campos obrigatórios", {
-      description: "Por favor, preencha todos os campos obrigatórios incluindo o nome do grupo."
-    });
-    return;
-  }
-
-  if (!hasCustomPhoto) {
-    console.log('🔴 Grupo sem foto personalizada do Telegram');
-    setShowPhotoRetryButton(true);
-    toast.error("Foto do Telegram obrigatória", {
-      description: "Não aceitamos grupos/canais sem foto personalizada. Atualize a foto no Telegram e clique em 'Já atualizei a foto'."
-    });
-    return;
-  }
-
-  console.log('🔵 Dados do formulário:', formData);
-  setIsLoading(true);
-
-  try {
-    console.log('🔵 Processando imagem e salvando grupo...');
-
-    const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    let finalImageUrl = formData.profileImage;
-
-    if (formData.profileImage && (formData.profileImage.startsWith('http://') || formData.profileImage.startsWith('https://'))) {
-      console.log('🔄 Baixando e fazendo upload da imagem para Firebase Storage...');
-      toast.info("🔄 Processando imagem...", {
-        description: "Fazendo upload da imagem para otimizar o carregamento"
-      });
-
-      const uploadResult = await imageUploadService.downloadAndUploadImage(formData.profileImage, tempGroupId);
-
-      if (uploadResult.success && uploadResult.url) {
-        finalImageUrl = uploadResult.url;
-        console.log('✅ Imagem salva no Firebase Storage:', finalImageUrl);
-      } else {
-        console.warn('⚠️ Falha no upload da imagem, usando URL original:', uploadResult.error);
-      }
+    if (!currentUser) {
+      console.log('🔴 Usuário não autenticado');
+      navigate('/auth?redirect=/cadastrar');
+      return;
     }
+
+    if (!validateTelegramUrl(formData.telegramUrl)) {
+      console.log('🔴 URL do Telegram inválida');
+      toast.error("Link inválido", {
+        description: "Por favor, insira um link válido do Telegram."
+      });
+      return;
+    }
+
+    if (!formData.telegramUrl || !formData.category || !formData.description || !formData.groupName) {
+      console.log('🔴 Campos obrigatórios faltando');
+      toast.error("Campos obrigatórios", {
+        description: "Por favor, preencha todos os campos obrigatórios incluindo o nome do grupo."
+      });
+      return;
+    }
+
+    if (!hasCustomPhoto) {
+      console.log('🔴 Grupo sem foto personalizada do Telegram');
+      setShowPhotoRetryButton(true);
+      toast.error("Foto do Telegram obrigatória", {
+        description: "Não aceitamos grupos/canais sem foto personalizada. Atualize a foto no Telegram e clique em 'Já atualizei a foto'."
+      });
+      return;
+    }
+
+    console.log('🔵 Dados do formulário:', formData);
+    setIsLoading(true);
+
+    try {
+      console.log('🔵 Processando imagem e salvando grupo...');
+
+      const tempGroupId = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      let finalImageUrl = formData.profileImage;
+
+      if (formData.profileImage && (formData.profileImage.startsWith('http://') || formData.profileImage.startsWith('https://'))) {
+        console.log('🔄 Baixando e fazendo upload da imagem para Firebase Storage...');
+        toast.info("🔄 Processando imagem...", {
+          description: "Fazendo upload da imagem para otimizar o carregamento"
+        });
+
+        const uploadResult = await imageUploadService.downloadAndUploadImage(formData.profileImage, tempGroupId);
+
+        if (uploadResult.success && uploadResult.url) {
+          finalImageUrl = uploadResult.url;
+          console.log('✅ Imagem salva no Firebase Storage:', finalImageUrl);
+        } else {
+          console.warn('⚠️ Falha no upload da imagem, usando URL original:', uploadResult.error);
+        }
+      }
 
       const groupData = {
         name: formData.groupName || formData.telegramUrl.split("/").pop() || "Grupo sem nome",
@@ -486,44 +486,42 @@ const handleSubmit = async (e: React.FormEvent) => {
         approved: true           // ← ou false, dependendo da lógica do backend
       };
 
+      console.log('🔵 Dados que serão enviados:', groupData);
 
-    console.log('🔵 Dados que serão enviados:', groupData);
+      // ✅ Passando userId e userEmail corretamente para o addGroup
+      const docId = await addGroup(groupData, currentUser.uid, currentUser.email);
 
-    // ✅ Passando userId e userEmail corretamente para o addGroup
-    const docId = await addGroup(groupData, currentUser.uid, currentUser.email);
+      console.log('🟢 Grupo salvo com sucesso! ID:', docId);
 
-    console.log('🟢 Grupo salvo com sucesso! ID:', docId);
+      setIsSubmitted(true);
 
-    setIsSubmitted(true);
+      if (hasCustomPhoto) {
+        toast.success("✅ Grupo aprovado automaticamente!", {
+          description: "Seu grupo tem foto personalizada e foi aprovado. Já está disponível na plataforma!"
+        });
+      } else {
+        toast.info("📝 Grupo enviado para análise", {
+          description: "Grupo sem foto personalizada precisa de aprovação manual. Será analisado em breve."
+        });
+      }
 
-    if (hasCustomPhoto) {
-      toast.success("✅ Grupo aprovado automaticamente!", {
-        description: "Seu grupo tem foto personalizada e foi aprovado. Já está disponível na plataforma!"
-      });
-    } else {
-      toast.info("📝 Grupo enviado para análise", {
-        description: "Grupo sem foto personalizada precisa de aprovação manual. Será analisado em breve."
-      });
+    } catch (error) {
+      console.log('🔴 Erro ao salvar grupo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
+      if (errorMessage.includes("já existente") || errorMessage.includes("duplicado")) {
+        toast.error("❌ Grupo já cadastrado", {
+          description: "Este grupo já foi cadastrado anteriormente na plataforma. Cada grupo pode ser cadastrado apenas uma vez."
+        });
+      } else {
+        toast.error("Erro ao cadastrar grupo", {
+          description: "Tente novamente em alguns instantes."
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-  } catch (error) {
-    console.log('🔴 Erro ao salvar grupo:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-
-    if (errorMessage.includes("já existente") || errorMessage.includes("duplicado")) {
-      toast.error("❌ Grupo já cadastrado", {
-        description: "Este grupo já foi cadastrado anteriormente na plataforma. Cada grupo pode ser cadastrado apenas uma vez."
-      });
-    } else {
-      toast.error("Erro ao cadastrar grupo", {
-        description: "Tente novamente em alguns instantes."
-      });
-    }
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   // Show loading if user authentication is being checked
   if (!currentUser) {
@@ -606,15 +604,15 @@ const handleSubmit = async (e: React.FormEvent) => {
       />
       
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
-          <div className="max-w-2xl mx-auto">
-            {/* Admin Batch Upload - Only for admin users */}
-            {isAdmin && (
-              <div className="mb-8">
-                <BatchUpload currentUser={currentUser} onProcessItem={handleBatchItem} />
-              </div>
-            )}
-            
-            {/* Header */}
+        <div className="max-w-2xl mx-auto">
+          {/* Admin Batch Upload - Only for admin users */}
+          {isAdmin && (
+            <div className="mb-8">
+              <BatchUpload currentUser={currentUser} onProcessItem={handleBatchItem} />
+            </div>
+          )}
+          
+          {/* Header */}
           <div className="mb-6 sm:mb-8">
             <Button variant="ghost" asChild className="mb-3 sm:mb-4">
               <Link to="/">
@@ -655,56 +653,59 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">{/* Preview do Grupo em Tempo Real */}
-                {formData.telegramUrl && (formData.groupName || isLoadingGroupInfo) && (
-                  <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 mb-6">
-                    <div className="flex items-center space-x-3 sm:space-x-4">
-                      <div className="relative">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                          {isLoadingGroupInfo ? (
-                            <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                          ) : formData.profileImage ? (
-                            <img 
-                              src={formData.profileImage} 
-                              alt={formData.groupName}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.groupName || "Grupo")}&background=0066cc&color=ffffff&size=800&font-size=0.4&format=png&bold=true`;
-                              }}
-                            />
-                          ) : (
-                            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        {!isLoadingGroupInfo && formData.groupName && (
-                          <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-success-foreground" />
-                          </div>
+            <CardContent className="pt-0">
+              {/* Preview do Grupo em Tempo Real */}
+              {formData.telegramUrl && (formData.groupName || isLoadingGroupInfo) && (
+                <Card className="p-3 sm:p-4 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20 mb-6">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                        {isLoadingGroupInfo ? (
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                        ) : formData.profileImage ? (
+                          <IntelligentGroupImage
+                            telegramUrl={formData.telegramUrl}
+                            fallbackImageUrl={formData.profileImage}
+                            groupName={formData.groupName}
+                            alt={formData.groupName}
+                            className="w-full h-full object-cover"
+                            priority={true}
+                            groupId={`temp_${Date.now()}`} // Temporary ID for preview
+                          />
+                        ) : (
+                          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
                         )}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1 sm:gap-2 mb-1">
-                          <h3 className="font-semibold text-base sm:text-lg">
-                            {isLoadingGroupInfo ? "Carregando..." : (formData.groupName || "Nome do grupo")}
-                          </h3>
-                          {!isLoadingGroupInfo && formData.groupName && (
-                            <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-                              Auto
-                            </span>
-                          )}
+                      {!isLoadingGroupInfo && formData.groupName && (
+                        <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-success-foreground" />
                         </div>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {isLoadingGroupInfo ? "Buscando informações..." : "Grupo do Telegram"}
-                        </p>
-                        {formData.description && !isLoadingGroupInfo && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {formData.description}
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
-                  </Card>
-                )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                        <h3 className="font-semibold text-base sm:text-lg">
+                          {isLoadingGroupInfo ? "Carregando..." : (formData.groupName || "Nome do grupo")}
+                        </h3>
+                        {!isLoadingGroupInfo && formData.groupName && (
+                          <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+                            Auto
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {isLoadingGroupInfo ? "Buscando informações..." : "Grupo do Telegram"}
+                      </p>
+                      {formData.description && !isLoadingGroupInfo && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {formData.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              )}
+              
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* URL do Telegram */}
                 <div className="space-y-2">
@@ -721,18 +722,22 @@ const handleSubmit = async (e: React.FormEvent) => {
                     disabled={isBatchProcessing}
                   />
                   {urlError && (
-                    <p className="text-xs text-red-500 mt-1">{urlError}</p>
+                    <p className="text-red-500 text-xs">{urlError}</p>
                   )}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Cole aqui o link do seu grupo do Telegram</span>
-                    {isLoadingGroupInfo && (
-                      <div className="flex items-center gap-1 sm:gap-2 text-primary">
-                        <div className="w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin" />
-                        <span>Buscando...</span>
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Cole o link completo do seu grupo/canal do Telegram
+                  </p>
                 </div>
+
+                {/* Loading indicator for group info */}
+                {isLoadingGroupInfo && (
+                  <div className="flex items-center justify-center p-4 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">Buscando informações do grupo...</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Botão para tentar buscar foto novamente */}
                 {showPhotoRetryButton && (
@@ -819,20 +824,20 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <Label htmlFor="description" className="text-sm font-medium">
                     Descrição sobre o grupo *
                   </Label>
-                   <Textarea
-                     id="description"
-                     placeholder="Descreva o que seu grupo oferece, regras, objetivo, etc..."
-                     value={formData.description}
-                     onChange={(e) => handleInputChange("description", e.target.value)}
-                     className="bg-muted/50 min-h-[100px] sm:min-h-[120px] resize-none"
-                     maxLength={1000}
-                   />
-                   <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
-                     <span>Mínimo 100 caracteres</span>
-                     <span className={formData.description.length < 100 ? "text-amber-600" : "text-green-600"}>
-                       {formData.description.length}/1000 caracteres
-                     </span>
-                   </div>
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva o que seu grupo oferece, regras, objetivo, etc..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    className="bg-muted/50 min-h-[100px] sm:min-h-[120px] resize-none"
+                    maxLength={1000}
+                  />
+                  <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
+                    <span>Mínimo 100 caracteres</span>
+                    <span className={formData.description.length < 100 ? "text-amber-600" : "text-green-600"}>
+                      {formData.description.length}/1000 caracteres
+                    </span>
+                  </div>
                 </div>
 
                 {/* Aviso sobre responsabilidade das regras */}
@@ -841,7 +846,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <strong>📝 Importante:</strong> As regras internas do seu grupo são de total responsabilidade do administrador do grupo. Nossa plataforma não gerencia nem interfere nas regras particulares de cada comunidade.
                   </p>
                 </div>
-
 
                 {/* Submit Button */}
                 <Button 

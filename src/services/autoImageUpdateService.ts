@@ -21,15 +21,21 @@ class AutoImageUpdateService {
     telegramImageUrl: string,
     brokenFirebaseUrl?: string
   ): Promise<ImageUpdateResult> {
+    console.log('🚀 === INÍCIO DA CORREÇÃO AUTOMÁTICA DE IMAGEM ===');
+    console.log('🆔 GroupId:', groupId);
+    console.log('✅ Nova imagem válida (Telegram API):', telegramImageUrl);
+    console.log('❌ Imagem com problema (Firestore):', brokenFirebaseUrl);
+    console.log('🔄 Processo: Download → Conversão WebP → Upload → Atualizar Firestore');
+
     // Avoid duplicate processing
     if (this.processingQueue.has(groupId)) {
-      console.log('⏳ Correção já está sendo processada para o grupo:', groupId);
+      console.log('⏳ CORREÇÃO JÁ EM PROGRESSO para grupo:', groupId);
       return { success: false, error: 'Already processing' };
     }
 
     // Limit concurrent updates to avoid overwhelming the system
     if (this.currentUpdates >= this.MAX_CONCURRENT_UPDATES) {
-      console.log('⏸️ Limite de correções simultâneas atingido, aguardando...');
+      console.log('⏸️ LIMITE DE CORREÇÕES SIMULTÂNEAS atingido, aguardando...');
       return { success: false, error: 'Rate limited' };
     }
 
@@ -37,7 +43,7 @@ class AutoImageUpdateService {
     if (!telegramImageUrl || 
         telegramImageUrl.includes('ui-avatars.com') ||
         telegramImageUrl.startsWith('data:image/svg+xml')) {
-      console.log('❌ URL da imagem do Telegram não é válida para correção:', telegramImageUrl);
+      console.log('❌ URL DA IMAGEM NÃO É VÁLIDA para correção:', telegramImageUrl);
       return { success: false, error: 'Invalid Telegram image URL' };
     }
 
@@ -45,16 +51,10 @@ class AutoImageUpdateService {
     this.currentUpdates++;
 
     try {
-      console.log('🚀 INICIANDO CORREÇÃO AUTOMÁTICA DE IMAGEM 404');
-      console.log('🆔 GroupId:', groupId);
-      console.log('❌ URL com 404 no Firebase Storage:', brokenFirebaseUrl);
-      console.log('✅ URL válida da API do Telegram:', telegramImageUrl);
-      console.log('🔄 Processo: Download → Conversão WebP → Upload → Atualizar Firestore');
+      console.log('📥 ETAPA 1: Iniciando download e conversão WebP...');
 
       // Import webpConversionService
       const { webpConversionService } = await import('./webpConversionService');
-      
-      console.log('📥 Iniciando download e conversão da imagem do Telegram...');
       
       // Download, convert and upload the Telegram image
       const conversionResult = await webpConversionService.convertAndUploadToWebP(
@@ -64,14 +64,14 @@ class AutoImageUpdateService {
       );
 
       if (!conversionResult.success || !conversionResult.webpUrl) {
+        console.log('❌ FALHA NA CONVERSÃO:', conversionResult.error);
         throw new Error(conversionResult.error || 'Failed to convert and upload image');
       }
 
-      console.log('✅ Imagem convertida e salva no Firebase Storage:', conversionResult.webpUrl);
-      console.log('🗑️ URL antiga com 404 foi processada para exclusão');
+      console.log('✅ ETAPA 1 CONCLUÍDA: Imagem convertida e salva:', conversionResult.webpUrl);
 
       // Update the group document in Firestore with new image URL
-      console.log('💾 Atualizando profileImage no Firestore...');
+      console.log('💾 ETAPA 2: Atualizando profileImage no Firestore...');
       const { updateDoc, doc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
       
@@ -83,8 +83,10 @@ class AutoImageUpdateService {
         autoUpdated: true
       });
 
-      console.log('✅ ProfileImage atualizado no Firestore com nova URL WebP');
-      console.log('🎯 CORREÇÃO COMPLETA: Próximo carregamento usará a imagem do Firebase Storage');
+      console.log('✅ ETAPA 2 CONCLUÍDA: ProfileImage atualizado no Firestore');
+      console.log('🎯 === CORREÇÃO AUTOMÁTICA FINALIZADA COM SUCESSO ===');
+      console.log('🆕 Nova URL WebP:', conversionResult.webpUrl);
+      console.log('🔄 Próximos carregamentos usarão a imagem corrigida do Firebase Storage');
 
       return {
         success: true,
@@ -92,12 +94,14 @@ class AutoImageUpdateService {
       };
 
     } catch (error) {
-      console.error('❌ ERRO NA CORREÇÃO AUTOMÁTICA DE IMAGEM:', error);
-      console.error('❌ Detalhes do erro:', {
+      console.error('❌ === ERRO CRÍTICO NA CORREÇÃO AUTOMÁTICA ===');
+      console.error('❌ Tipo do erro:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('❌ Mensagem:', error instanceof Error ? error.message : String(error));
+      console.error('❌ Parâmetros da correção:', {
         groupId,
         telegramImageUrl,
         brokenFirebaseUrl,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        timestamp: new Date().toISOString()
       });
       
       return {
@@ -107,6 +111,7 @@ class AutoImageUpdateService {
     } finally {
       this.processingQueue.delete(groupId);
       this.currentUpdates--;
+      console.log('🧹 Limpeza: Grupo removido da fila de processamento');
     }
   }
 

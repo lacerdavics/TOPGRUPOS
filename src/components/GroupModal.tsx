@@ -32,7 +32,7 @@ const GroupModal = ({ group, open, onOpenChange }: GroupModalProps) => {
           <div className="flex items-center space-x-4">
             {/* Group Avatar */}
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
-              {group.profileImage ? (
+              {group.name ? (
                 <IntelligentGroupImage
                   fallbackImageUrl={group.profileImage || group.imageUrl}
                   telegramUrl={group.telegramUrl}

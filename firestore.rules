@@ -21,48 +21,22 @@ service cloud.firestore {
         && request.resource.data.userId == request.auth.uid
         && isValidGroup();
 
-      // update ainda precisa validar dados
       allow update: if request.auth != null
         && (resource.data.userId == request.auth.uid || isAdmin())
         && isValidGroup();
 
-      // Allow auto image update service to update specific fields
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']);
+      // Auto image update service
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+        ['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']
+      );
 
-      // Allow auto image update service to update specific fields by unauthenticated users
-      // WARNING: This rule allows any unauthenticated user to modify these specific fields on any group.
-      allow update: if request.auth == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']);
+      // Unauthenticated auto image update (⚠️ cuidado!)
+      allow update: if request.auth == null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+        ['profileImage', 'imageUpdatedAt', 'imageCorrectedAt', 'autoUpdated']
+      );
 
-      // delete não precisa validar dados, só verificar dono ou admin
       allow delete: if request.auth != null
         && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-
-    // ==============================
-    // FUNCTIONS
-    // ==============================
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-    }
-
-    function isValidGroup() {
-      return request.resource.data.name is string
-        && request.resource.data.category is string
-        && request.resource.data.telegramUrl is string
-        && request.resource.data.profileImage is string
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.hasCustomPhoto is bool
-        && request.resource.data.membersCount is int
-        && request.resource.data.approved is bool
-        &&
-        (
-          // Caso 1: grupo aprovado (admin OU usuário comum com foto personalizada)
-          (request.resource.data.approved == true
-            && (isAdmin() || request.resource.data.hasCustomPhoto == true))
-          ||
-          // Caso 2: grupo pendente (qualquer usuário pode criar)
-          request.resource.data.approved == false
-        );
     }
 
     // ==============================
@@ -78,11 +52,11 @@ service cloud.firestore {
     }
 
     // ==============================
-    // STATS
+    // STATS (agregadas)
     // ==============================
     match /stats/{docId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
 
     // ==============================
@@ -94,11 +68,20 @@ service cloud.firestore {
     }
 
     // ==============================
-    // NOTIFICATIONS
+    // NOTIFICATIONS (geral do sistema)
     // ==============================
     match /notifications/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
+    }
+
+    // ==============================
+    // EXPIRED LINK NOTIFICATIONS (fluxo que ajustamos)
+    // ==============================
+    match /expired_link_notifications/{docId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow delete: if false; // não permitir deletar
     }
 
     // ==============================
@@ -126,10 +109,36 @@ service cloud.firestore {
     }
 
     // ==============================
-    // VISITS
+    // VISITS (logs individuais)
     // ==============================
     match /visits/{visitId} {
       allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // ==============================
+    // FUNCTIONS AUX
+    // ==============================
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isValidGroup() {
+      return request.resource.data.name is string
+        && request.resource.data.category is string
+        && request.resource.data.telegramUrl is string
+        && request.resource.data.profileImage is string
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.hasCustomPhoto is bool
+        && request.resource.data.membersCount is int
+        && request.resource.data.approved is bool
+        &&
+        (
+          (request.resource.data.approved == true
+            && (isAdmin() || request.resource.data.hasCustomPhoto == true))
+          ||
+          request.resource.data.approved == false
+        );
     }
   }
 }

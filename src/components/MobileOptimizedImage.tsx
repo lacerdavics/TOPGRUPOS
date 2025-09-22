@@ -1,3 +1,11 @@
+/**
+ * ⚠️ AVISO: Para imagens de grupos use IntelligentGroupImage.tsx
+ * Este componente está reservado para outros tipos de imagens (banners, avatars de usuário, etc.)
+ * 
+ * Para grupos do Telegram, sempre use:
+ * import IntelligentGroupImage from '@/components/IntelligentGroupImage';
+ */
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { useLazyLoad, useMobileOptimization } from '@/hooks/useMobileOptimization';
 

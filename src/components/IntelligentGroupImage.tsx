@@ -9,7 +9,7 @@ interface IntelligentGroupImageProps {
   alt?: string;
   className?: string;
   priority?: boolean;
-  groupId?: string; // Add groupId for auto-update functionality
+  groupId?: string; // Required for auto-update functionality
 }
 
 export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
@@ -24,13 +24,18 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
   const [currentSrc, setCurrentSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [isUpdatingImage, setIsUpdatingImage] = useState(false);
-  const [hasTriggeredUpdate, setHasTriggeredUpdate] = useState(false);
   const [autoUpdateInProgress, setAutoUpdateInProgress] = useState(false);
+  const [hasTriggeredUpdate, setHasTriggeredUpdate] = useState(false);
+
+  console.log('🔄 IntelligentGroupImage - Iniciando carregamento para:', groupName);
+  console.log('📸 profileImage (fallbackImageUrl):', fallbackImageUrl);
+  console.log('🔗 telegramUrl:', telegramUrl);
+  console.log('🆔 groupId:', groupId);
 
   // Test if image loads successfully
   const testImageLoad = useCallback((url: string): Promise<boolean> => {
     return new Promise((resolve) => {
+      console.log('🧪 Testando carregamento da imagem:', url);
       const img = new Image();
       img.onload = () => {
         console.log('✅ Imagem carregada com sucesso:', url);
@@ -83,57 +88,72 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
     }
   }, []);
 
-  // Load and validate image with priority system
+  // Main image loading logic with priority system
   const loadImage = useCallback(async () => {
-    console.log('🔄 Iniciando carregamento de imagem para:', groupName);
-    console.log('📸 profileImage (fallbackImageUrl):', fallbackImageUrl);
-    console.log('🔗 telegramUrl:', telegramUrl);
-    console.log('🆔 groupId:', groupId);
+    console.log('🚀 === INÍCIO DO FLUXO DE CARREGAMENTO DE IMAGEM ===');
+    console.log('👤 Grupo:', groupName);
+    console.log('🆔 GroupId:', groupId);
+    console.log('📸 ProfileImage (Firestore):', fallbackImageUrl);
+    console.log('🔗 TelegramUrl:', telegramUrl);
     
     setIsLoading(true);
     setHasError(false);
 
-    // Priority 1: SEMPRE usar profileImage do Firestore primeiro se disponível
+    // ETAPA 1: Tentar profileImage (Firestore / Firebase Storage)
     if (fallbackImageUrl && fallbackImageUrl.trim()) {
-      console.log('🎯 Testando profileImage do Firestore:', fallbackImageUrl);
+      console.log('🎯 ETAPA 1: Testando profileImage do Firestore:', fallbackImageUrl);
       
-      // Testar se a imagem do Firestore carrega (prioridade máxima)
       const loadSuccess = await testImageLoad(fallbackImageUrl);
       if (loadSuccess) {
-        console.log('✅ Usando profileImage do Firestore (carregamento bem-sucedido)');
+        console.log('✅ SUCESSO ETAPA 1: Usando profileImage do Firestore');
         setCurrentSrc(fallbackImageUrl);
         setIsLoading(false);
         setHasError(false);
         return;
       } else {
-        console.log('❌ profileImage do Firestore falhou ao carregar, tentando API como fallback');
+        console.log('❌ FALHA ETAPA 1: profileImage do Firestore não carregou (404/erro)');
       }
+    } else {
+      console.log('⚠️ ETAPA 1 PULADA: Sem profileImage no Firestore');
     }
 
-    // Priority 2: Se profileImage falhou, tentar API do Telegram
+    // ETAPA 2: Fallback para telegramUrl (via fetchTelegramImage)
     if (telegramUrl && telegramUrl.includes('t.me/')) {
-      console.log('🔄 Tentando buscar imagem da API do Telegram como fallback');
+      console.log('🔄 ETAPA 2: Tentando buscar imagem da API do Telegram');
       const telegramImage = await fetchTelegramImage(telegramUrl);
       
       if (telegramImage) {
+        console.log('📥 ETAPA 2: Imagem obtida da API:', telegramImage);
+        
         const loadSuccess = await testImageLoad(telegramImage);
         if (loadSuccess) {
-          console.log('✅ Usando imagem da API do Telegram');
+          console.log('✅ SUCESSO ETAPA 2: Usando imagem da API do Telegram');
           setCurrentSrc(telegramImage);
           setIsLoading(false);
           setHasError(false);
           
-          // AUTO-UPDATE: Implementar correção automática de imagens 404
-          if (groupId && telegramImage && !hasTriggeredUpdate && !autoUpdateInProgress &&
+          // ETAPA 3: Auto-update se necessário
+          if (groupId && 
+              telegramImage && 
+              !hasTriggeredUpdate && 
+              !autoUpdateInProgress &&
               !telegramImage.includes('ui-avatars.com') &&
               !telegramImage.startsWith('data:image/svg+xml') &&
-              telegramImage !== fallbackImageUrl) { // Só atualizar se API retornou imagem diferente
+              telegramImage !== fallbackImageUrl) {
             
-            console.log('🚀 AUTO-CORRECTION TRIGGERED: Imagem do Firestore falhou (404), iniciando correção automática...');
-            console.log('🆔 GroupId:', groupId);
-            console.log('❌ Imagem com 404 no Firestore:', fallbackImageUrl);
-            console.log('✅ Imagem válida da API do Telegram:', telegramImage);
-            console.log('🔄 Iniciando processo: Download → Conversão WebP → Upload → Atualizar Firestore');
+            console.log('🚀 ETAPA 3: AUTO-UPDATE TRIGGERED');
+            console.log('🔍 Validação para auto-update:');
+            console.log('   - GroupId presente:', !!groupId);
+            console.log('   - Imagem da API válida:', !!telegramImage);
+            console.log('   - Não é avatar genérico:', !telegramImage.includes('ui-avatars.com'));
+            console.log('   - Não é SVG:', !telegramImage.startsWith('data:image/svg+xml'));
+            console.log('   - Diferente da atual:', telegramImage !== fallbackImageUrl);
+            console.log('   - Update não foi tentado:', !hasTriggeredUpdate);
+            console.log('   - Update não está em progresso:', !autoUpdateInProgress);
+            
+            console.log('🔄 Iniciando correção automática...');
+            console.log('❌ Imagem com problema no Firestore:', fallbackImageUrl);
+            console.log('✅ Nova imagem válida da API:', telegramImage);
             
             setAutoUpdateInProgress(true);
             setHasTriggeredUpdate(true);
@@ -142,12 +162,12 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
             autoImageUpdateService.correctBrokenImage(
               groupId,
               telegramImage,
-              fallbackImageUrl // URL antiga com 404 para ser substituída
+              fallbackImageUrl // URL antiga com problema para ser substituída
             ).then((result) => {
               if (result.success) {
-                console.log('🎉 AUTO-CORRECTION SUCCESS: Imagem corrigida e salva no Firebase Storage!');
+                console.log('🎉 AUTO-UPDATE SUCCESS: Imagem corrigida e salva no Firebase Storage!');
                 console.log('🆕 Nova URL WebP salva no Firestore:', result.newImageUrl);
-                console.log('🗑️ URL antiga com 404 foi substituída');
+                console.log('🗑️ URL antiga foi substituída');
                 
                 // Atualizar a imagem exibida para a nova URL do Firebase Storage
                 if (result.newImageUrl) {
@@ -163,156 +183,52 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
                   }));
                 }
               } else {
-                console.log('⚠️ AUTO-CORRECTION FAILED:', result.error);
-              }
-            }).catch((error) => {
-              console.error('❌ AUTO-CORRECTION ERROR:', error);
-            }).finally(() => {
-              setAutoUpdateInProgress(false);
-            });
-          } else if (telegramImage === fallbackImageUrl) {
-            console.log('✅ API retornou a mesma imagem que já temos, não precisa atualizar');
-          } else if (!groupId) {
-            console.log('⚠️ GroupId não fornecido, não é possível fazer correção automática');
-          } else if (hasTriggeredUpdate) {
-            console.log('⚠️ Correção automática já foi tentada para este grupo');
-          } else if (autoUpdateInProgress) {
-            console.log('⚠️ Correção automática já está em progresso');
-          }
-          return;
-        } else {
-          console.log('❌ Imagem da API do Telegram falhou ao carregar');
-        }
-      }
-    }
-
-    // Priority 3: Se tudo falhou, usar placeholder vazio
-    console.log('❌ Nenhuma imagem válida encontrada, usando placeholder vazio');
-    setCurrentSrc('');
-    setIsLoading(false);
-    setHasError(true);
-  }, [fallbackImageUrl, telegramUrl, groupName, groupId, testImageLoad, fetchTelegramImage, hasTriggeredUpdate]);
-
-  // Load and validate image with priority system (OLD VERSION - REPLACED ABOVE)
-  const loadImageOld = useCallback(async () => {
-    console.log('🔄 Iniciando carregamento de imagem para:', groupName);
-    console.log('📸 profileImage (fallbackImageUrl):', fallbackImageUrl);
-    console.log('🔗 telegramUrl:', telegramUrl);
-    console.log('🆔 groupId:', groupId);
-    
-    setIsLoading(true);
-    setHasError(false);
-
-    // Priority 1: Use profileImage from Firestore if available and valid (including telesco.pe)
-    if (fallbackImageUrl && fallbackImageUrl.trim()) {
-      console.log('🎯 Testando profileImage do Firestore:', fallbackImageUrl);
-      
-      // Check if it's a valid Firebase Storage URL, telesco.pe, or other valid image URL
-      if (fallbackImageUrl.includes('firebasestorage.googleapis.com') ||
-          fallbackImageUrl.includes('imgbb.com') ||
-          fallbackImageUrl.includes('cdn.') ||
-          fallbackImageUrl.includes('telesco.pe') ||
-          fallbackImageUrl.includes('cdn1.telesco.pe') ||
-          fallbackImageUrl.includes('cdn2.telesco.pe') ||
-          fallbackImageUrl.includes('cdn3.telesco.pe') ||
-          fallbackImageUrl.includes('cdn4.telesco.pe') ||
-          (fallbackImageUrl.startsWith('http') && 
-           !fallbackImageUrl.includes('ui-avatars.com'))) {
-        
-        console.log('✅ URL válida detectada, testando carregamento:', fallbackImageUrl);
-        const loadSuccess = await testImageLoad(fallbackImageUrl);
-        if (loadSuccess) {
-          console.log('✅ Usando profileImage do Firestore (carregamento bem-sucedido)');
-          setCurrentSrc(fallbackImageUrl);
-          setIsLoading(false);
-          setHasError(false);
-          return;
-        } else {
-          console.log('❌ profileImage do Firestore falhou ao carregar, tentando API como fallback');
-        }
-      } else {
-        console.log('❌ profileImage não é uma URL válida:', fallbackImageUrl);
-      }
-    }
-
-    // Priority 2: Try to get image from Telegram API if we have the URL
-    if (telegramUrl && telegramUrl.includes('t.me/')) {
-      console.log('🔄 Tentando buscar imagem da API do Telegram');
-      const telegramImage = await fetchTelegramImage(telegramUrl);
-      
-      if (telegramImage) {
-        const loadSuccess = await testImageLoad(telegramImage);
-        if (loadSuccess) {
-          console.log('✅ Usando imagem da API do Telegram');
-          setCurrentSrc(telegramImage);
-          setIsLoading(false);
-          setHasError(false);
-          
-          // AUTO-UPDATE: Only trigger if we got a DIFFERENT image from API that's better than current
-          if (groupId && telegramImage && !hasTriggeredUpdate &&
-              !telegramImage.includes('ui-avatars.com') &&
-              !telegramImage.startsWith('data:image/svg+xml') &&
-              telegramImage !== fallbackImageUrl) { // Only update if API returned different image
-            
-            console.log('🚀 TRIGGER AUTO-UPDATE: API retornou imagem diferente, iniciando atualização automática...');
-            console.log('🆔 GroupId:', groupId);
-            console.log('📸 Current profileImage:', fallbackImageUrl);
-            console.log('🆕 New image from API:', telegramImage);
-            console.log('🔍 Images are different:', telegramImage !== fallbackImageUrl);
-            
-            setIsUpdatingImage(true);
-            setHasTriggeredUpdate(true);
-            
-            // Update in background with proper error handling
-            autoImageUpdateService.updateGroupImageFromFallback(
-              groupId,
-              telegramImage,
-              fallbackImageUrl
-            ).then((result) => {
-              if (result.success) {
-                console.log('🎉 AUTO-UPDATE SUCCESS: Imagem atualizada com sucesso!');
-                console.log('🆕 Nova URL salva no Firestore:', result.newImageUrl);
-                
-                // Update current src to the new Firebase URL
-                if (result.newImageUrl) {
-                  setCurrentSrc(result.newImageUrl);
-                }
-              } else {
                 console.log('⚠️ AUTO-UPDATE FAILED:', result.error);
               }
             }).catch((error) => {
               console.error('❌ AUTO-UPDATE ERROR:', error);
             }).finally(() => {
-              setIsUpdatingImage(false);
+              setAutoUpdateInProgress(false);
             });
-          } else if (telegramImage === fallbackImageUrl) {
-            console.log('✅ API retornou a mesma imagem que já temos, não precisa atualizar');
+          } else {
+            console.log('⚠️ ETAPA 3 PULADA: Condições para auto-update não atendidas');
+            if (!groupId) console.log('   - Motivo: GroupId não fornecido');
+            if (!telegramImage) console.log('   - Motivo: Sem imagem da API');
+            if (telegramImage?.includes('ui-avatars.com')) console.log('   - Motivo: É avatar genérico');
+            if (telegramImage?.startsWith('data:image/svg+xml')) console.log('   - Motivo: É SVG genérico');
+            if (telegramImage === fallbackImageUrl) console.log('   - Motivo: Mesma imagem que já temos');
+            if (hasTriggeredUpdate) console.log('   - Motivo: Update já foi tentado');
+            if (autoUpdateInProgress) console.log('   - Motivo: Update já está em progresso');
           }
           return;
         } else {
-          console.log('❌ Imagem da API do Telegram falhou ao carregar');
+          console.log('❌ FALHA ETAPA 2: Imagem da API do Telegram não carregou');
         }
+      } else {
+        console.log('❌ ETAPA 2: API não retornou imagem válida');
       }
+    } else {
+      console.log('⚠️ ETAPA 2 PULADA: Sem telegramUrl válido');
     }
 
-    // Priority 3: No image found - show empty placeholder
-    console.log('❌ Nenhuma imagem válida encontrada, gerando avatar fallback');
-    
-    // Generate a proper avatar fallback using the group name
+    // ETAPA 4: Fallback final - placeholder gerado
+    console.log('🎨 ETAPA 4: Gerando placeholder final');
     const avatarFallback = generateFallbackAvatar(groupName, 800);
     console.log('🎨 Avatar fallback gerado:', avatarFallback);
     
     setCurrentSrc(avatarFallback);
     setIsLoading(false);
-    setHasError(false); // Not an error - we have a valid fallback
-  }, [fallbackImageUrl, telegramUrl, groupName, groupId, testImageLoad, fetchTelegramImage, hasTriggeredUpdate]);
+    setHasError(false); // Não é erro - temos um fallback válido
+    
+    console.log('🏁 === FIM DO FLUXO DE CARREGAMENTO ===');
+  }, [fallbackImageUrl, telegramUrl, groupName, groupId, testImageLoad, fetchTelegramImage, hasTriggeredUpdate, autoUpdateInProgress]);
 
   // Initialize image loading
   useEffect(() => {
     loadImage();
   }, [loadImage]);
 
-  // Listen for image update events
+  // Listen for image update events from auto-correction
   useEffect(() => {
     const handleImageCorrection = (event: CustomEvent) => {
       if (event.detail.groupId === groupId && event.detail.newImageUrl) {
@@ -329,6 +245,7 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
       window.removeEventListener('groupImageCorrected', handleImageCorrection as EventListener);
     };
   }, [groupId]);
+
   const handleLoad = useCallback(() => {
     console.log('✅ Evento onLoad disparado para:', currentSrc);
     setIsLoading(false);
@@ -341,11 +258,11 @@ export const IntelligentGroupImage: React.FC<IntelligentGroupImageProps> = ({
     setIsLoading(false);
     
     // If current image fails, try to reload from API
-    if (telegramUrl && currentSrc !== '') {
+    if (telegramUrl && currentSrc !== '' && !hasTriggeredUpdate) {
       console.log('🔄 Tentando recarregar da API após erro');
       loadImage();
     }
-  }, [currentSrc, telegramUrl, loadImage]);
+  }, [currentSrc, telegramUrl, loadImage, hasTriggeredUpdate]);
 
   // Show loading state
   if (isLoading || autoUpdateInProgress) {

@@ -8,6 +8,7 @@ import CategoryIcon from "@/components/CategoryIcon";
 import { decodeHtmlEntities } from "@/lib/utils";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 
 interface Group {
   id: string;
@@ -143,9 +144,9 @@ const GroupDetails = () => {
             {/* Header */}
             <div className="flex items-center space-x-4 mb-8">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
-                {group.profileImage ? (
+                {group.name ? (
                   <IntelligentGroupImage
-                    fallbackImageUrl={group.profileImage || group.imageUrl}
+                    fallbackImageUrl={group.profileImage || group.imageUrl || group.profileImage}
                     telegramUrl={group.telegramUrl}
                     groupName={decodedName}
                     alt={decodedName}

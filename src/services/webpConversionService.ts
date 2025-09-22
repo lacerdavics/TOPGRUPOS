@@ -96,25 +96,24 @@ class WebPConversionService {
    */
   async convertAndUploadToWebP(imageUrl: string, groupId: string, oldImageUrl?: string): Promise<WebPConversionResult> {
     try {
-      console.log('🚀 webpConversionService: ===== INICIANDO PROCESSO COMPLETO =====');
-      console.log('📥 webpConversionService: URL da imagem para download:', imageUrl);
-      console.log('🆔 webpConversionService: Group ID:', groupId);
-      console.log('🗑️ webpConversionService: Imagem antiga para deletar:', oldImageUrl || 'Nenhuma');
-      console.log('🔄 webpConversionService: Processo: Download → Conversão WebP → Upload → Exclusão antiga');
+      console.log('🚀 === WEBP CONVERSION SERVICE - INÍCIO ===');
+      console.log('📥 URL para download:', imageUrl);
+      console.log('🆔 Group ID:', groupId);
+      console.log('🗑️ Imagem antiga para deletar:', oldImageUrl || 'Nenhuma');
 
       // Step 0: Delete old image if provided
       if (oldImageUrl) {
-        console.log('🗑️ webpConversionService: ETAPA 0: EXCLUINDO IMAGEM ANTIGA ANTES DO UPLOAD');
+        console.log('🗑️ ETAPA 0: Excluindo imagem antiga...');
         const deleteSuccess = await this.deleteOldImage(oldImageUrl);
         if (deleteSuccess) {
-          console.log('✅ webpConversionService: IMAGEM ANTIGA EXCLUÍDA COM SUCESSO');
+          console.log('✅ Imagem antiga excluída com sucesso');
         } else {
-          console.log('⚠️ webpConversionService: NÃO FOI POSSÍVEL EXCLUIR IMAGEM ANTIGA, CONTINUANDO');
+          console.log('⚠️ Não foi possível excluir imagem antiga, continuando...');
         }
       }
 
       // Step 1: Get optimized/proxied image URL to bypass CORS
-      console.log('🔄 webpConversionService: ETAPA 1: OTIMIZANDO URL PARA BYPASS CORS');
+      console.log('🔄 ETAPA 1: Otimizando URL para bypass CORS...');
       const optimizedImageUrl = await cloudflareService.optimizeImage(imageUrl, {
         width: 800,
         height: 800,
@@ -122,13 +121,10 @@ class WebPConversionService {
         quality: 85
       });
 
-      console.log('✅ webpConversionService: URL OTIMIZADA OBTIDA');
-      console.log('🔗 webpConversionService: URL original:', imageUrl);
-      console.log('🔗 webpConversionService: URL otimizada:', optimizedImageUrl);
+      console.log('✅ URL otimizada obtida:', optimizedImageUrl);
       
       // Step 2: Download the image using the proxied URL
-      console.log('📥 webpConversionService: ETAPA 2: INICIANDO DOWNLOAD DA IMAGEM');
-      console.log('📥 webpConversionService: Fazendo fetch da URL otimizada...');
+      console.log('📥 ETAPA 2: Iniciando download da imagem...');
       const response = await fetch(optimizedImageUrl, {
         method: 'GET',
         signal: AbortSignal.timeout(30000), // 30 second timeout
@@ -136,76 +132,54 @@ class WebPConversionService {
       });
 
       if (!response.ok) {
-        console.error('❌ webpConversionService: FALHA NO DOWNLOAD DA IMAGEM');
-        console.error('❌ webpConversionService: Status HTTP:', response.status);
-        console.error('❌ webpConversionService: Status Text:', response.statusText);
-        console.error('❌ webpConversionService: URL que falhou:', optimizedImageUrl);
+        console.error('❌ FALHA NO DOWNLOAD - Status:', response.status, response.statusText);
         throw new Error(`Failed to download image: ${response.status}`);
       }
 
       const blob = await response.blob();
-      console.log('✅ webpConversionService: IMAGEM BAIXADA COM SUCESSO');
-      console.log('📊 webpConversionService: Tamanho do arquivo baixado:', Math.round(blob.size / 1024), 'KB');
-      console.log('📊 webpConversionService: Tipo MIME do arquivo:', blob.type);
-      console.log('📊 webpConversionService: Arquivo é válido:', blob.type.startsWith('image/') ? 'SIM' : 'NÃO');
+      console.log('✅ DOWNLOAD CONCLUÍDO - Tamanho:', Math.round(blob.size / 1024), 'KB, Tipo:', blob.type);
       
       // Validate image type and size
       if (!blob.type.startsWith('image/')) {
-        console.error('❌ webpConversionService: ARQUIVO BAIXADO NÃO É UMA IMAGEM');
-        console.error('❌ webpConversionService: Tipo MIME recebido:', blob.type);
+        console.error('❌ ARQUIVO NÃO É IMAGEM - Tipo MIME:', blob.type);
         throw new Error('Downloaded file is not an image');
       }
 
       if (blob.size > this.MAX_FILE_SIZE) {
-        console.error('❌ webpConversionService: ARQUIVO MUITO GRANDE');
-        console.error('❌ webpConversionService: Tamanho:', Math.round(blob.size / 1024 / 1024), 'MB');
-        console.error('❌ webpConversionService: Limite máximo:', Math.round(this.MAX_FILE_SIZE / 1024 / 1024), 'MB');
+        console.error('❌ ARQUIVO MUITO GRANDE:', Math.round(blob.size / 1024 / 1024), 'MB');
         throw new Error('Image file too large (max 5MB)');
       }
 
 
       // Step 3: Convert to WebP using Canvas
-      console.log('🔄 webpConversionService: ETAPA 3: INICIANDO CONVERSÃO PARA WEBP');
+      console.log('🔄 ETAPA 3: Convertendo para WebP...');
       const webpBlob = await this.convertToWebP(blob);
       
-      console.log('✅ webpConversionService: CONVERSÃO PARA WEBP CONCLUÍDA');
-      console.log('📊 webpConversionService: Tamanho original:', Math.round(blob.size / 1024), 'KB');
-      console.log('📊 webpConversionService: Tamanho WebP:', Math.round(webpBlob.size / 1024), 'KB');
-      console.log('📊 webpConversionService: Redução de tamanho:', Math.round(((blob.size - webpBlob.size) / blob.size) * 100), '%');
+      const reduction = Math.round(((blob.size - webpBlob.size) / blob.size) * 100);
+      console.log('✅ CONVERSÃO WEBP CONCLUÍDA - Redução:', reduction, '% (', Math.round(webpBlob.size / 1024), 'KB )');
 
       // Step 4: Upload to Firebase Storage
-      console.log('🔄 webpConversionService: ETAPA 4: PREPARANDO UPLOAD PARA FIREBASE STORAGE');
+      console.log('🔄 ETAPA 4: Fazendo upload para Firebase Storage...');
       const filename = `${groupId}_${Date.now()}.webp`;
       const imagePath = `${this.WEBP_FOLDER}/${filename}`;
 
-      console.log('📁 webpConversionService: Pasta de destino:', this.WEBP_FOLDER);
-      console.log('📁 webpConversionService: Nome do arquivo:', filename);
-      console.log('📁 webpConversionService: Caminho completo:', imagePath);
+      console.log('📁 Caminho do arquivo:', imagePath);
       
       const storageRef = ref(storage, imagePath);
-      console.log('📁 webpConversionService: Referência do Firebase Storage criada');
-      console.log('📁 webpConversionService: Full path:', storageRef.fullPath);
-      console.log('📁 webpConversionService: Bucket:', storageRef.bucket);
       
-      console.log('⬆️ webpConversionService: INICIANDO UPLOAD PARA FIREBASE STORAGE');
-      console.log('⬆️ webpConversionService: Tamanho do arquivo a ser enviado:', Math.round(webpBlob.size / 1024), 'KB');
       const uploadResult = await uploadBytes(storageRef, webpBlob, {
         contentType: 'image/webp',
         cacheControl: 'public,max-age=31536000', // Cache for 1 year
       });
 
-      console.log('✅ webpConversionService: UPLOAD PARA FIREBASE STORAGE CONCLUÍDO!');
-      console.log('📁 webpConversionService: Arquivo salvo em:', uploadResult.ref.fullPath);
-      console.log('📁 webpConversionService: Bucket de destino:', uploadResult.ref.bucket);
-      console.log('📁 webpConversionService: Nome final do arquivo:', uploadResult.ref.name);
+      console.log('✅ UPLOAD CONCLUÍDO para Firebase Storage');
 
       // Get download URL
-      console.log('🔗 webpConversionService: ETAPA 5: OBTENDO URL DE DOWNLOAD PÚBLICA');
+      console.log('🔗 ETAPA 5: Obtendo URL pública...');
       const downloadURL = await getDownloadURL(uploadResult.ref);
       
-      console.log('✅ webpConversionService: URL DE DOWNLOAD OBTIDA COM SUCESSO!');
-      console.log('🔗 webpConversionService: URL pública final:', downloadURL);
-      console.log('🎯 webpConversionService: ===== PROCESSO COMPLETO FINALIZADO =====');
+      console.log('✅ === WEBP CONVERSION FINALIZADA COM SUCESSO ===');
+      console.log('🔗 URL pública final:', downloadURL);
 
       return {
         success: true,
@@ -216,16 +190,12 @@ class WebPConversionService {
       };
 
     } catch (error) {
-      console.error('❌ webpConversionService: ===== ERRO CRÍTICO NO PROCESSO =====');
-      console.error('❌ webpConversionService: Tipo do erro:', error instanceof Error ? error.constructor.name : typeof error);
-      console.error('❌ webpConversionService: Mensagem:', error instanceof Error ? error.message : String(error));
-      console.error('❌ webpConversionService: Código do erro:', (error as any)?.code);
-      console.error('❌ webpConversionService: Stack trace:', error instanceof Error ? error.stack : 'N/A');
-      console.error('❌ webpConversionService: Parâmetros da chamada:', {
+      console.error('❌ === ERRO CRÍTICO NA CONVERSÃO WEBP ===');
+      console.error('❌ Mensagem:', error instanceof Error ? error.message : String(error));
+      console.error('❌ Parâmetros:', {
         imageUrl,
         groupId,
         oldImageUrl,
-        timestamp: new Date().toISOString()
       });
       
       return {
@@ -242,31 +212,27 @@ class WebPConversionService {
    */
   private async convertToWebP(imageBlob: Blob): Promise<Blob> {
     return new Promise((resolve, reject) => {
-      console.log('🎨 webpConversionService: INICIANDO CONVERSÃO CANVAS PARA WEBP');
-      console.log('📊 webpConversionService: Blob de entrada - Tamanho:', Math.round(imageBlob.size / 1024), 'KB');
-      console.log('📊 webpConversionService: Blob de entrada - Tipo MIME:', imageBlob.type);
-      console.log('📊 webpConversionService: Qualidade WebP configurada:', this.WEBP_QUALITY);
+      console.log('🎨 Iniciando conversão Canvas para WebP...');
+      console.log('📊 Entrada:', Math.round(imageBlob.size / 1024), 'KB,', imageBlob.type);
       
       const img = new Image();
       
       img.onload = () => {
         try {
-          console.log('🖼️ webpConversionService: IMAGEM CARREGADA NO CANVAS COM SUCESSO');
-          console.log('📐 webpConversionService: Largura original:', img.naturalWidth, 'px');
-          console.log('📐 webpConversionService: Altura original:', img.naturalHeight, 'px');
+          console.log('🖼️ Imagem carregada no Canvas:', img.naturalWidth, 'x', img.naturalHeight, 'px');
           
           // Create canvas
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
           if (!ctx) {
-            console.error('❌ webpConversionService: CANVAS CONTEXT NÃO DISPONÍVEL');
+            console.error('❌ Canvas context não disponível');
             reject(new Error('Canvas context not available'));
             return;
           }
 
           // Set canvas dimensions (maintain aspect ratio, max 800px)
-          console.log('📐 webpConversionService: Calculando dimensões finais (máx 800px)...');
+          console.log('📐 Calculando dimensões finais (máx 800px)...');
           const maxDimension = 800;
           let { width, height } = img;
           
@@ -278,35 +244,28 @@ class WebPConversionService {
               width = Math.round((width * maxDimension) / height);
               height = maxDimension;
             }
-            console.log('📐 webpConversionService: Imagem será redimensionada');
+            console.log('📐 Redimensionando para:', width, 'x', height);
           } else {
-            console.log('📐 webpConversionService: Imagem mantém tamanho original');
+            console.log('📐 Mantendo tamanho original');
           }
 
-          console.log('📐 webpConversionService: Largura final:', width, 'px');
-          console.log('📐 webpConversionService: Altura final:', height, 'px');
           canvas.width = width;
           canvas.height = height;
 
           // Draw image with high quality
-          console.log('🎨 webpConversionService: Configurando qualidade de renderização...');
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          console.log('🎨 webpConversionService: DESENHANDO IMAGEM NO CANVAS');
           ctx.drawImage(img, 0, 0, width, height);
 
           // Convert to WebP blob
-          console.log('🔄 webpConversionService: CONVERTENDO CANVAS PARA BLOB WEBP');
-          console.log('🔄 webpConversionService: Qualidade WebP:', this.WEBP_QUALITY);
+          console.log('🔄 Convertendo Canvas para blob WebP...');
           canvas.toBlob(
             (webpBlob) => {
               if (webpBlob) {
-                console.log('✅ webpConversionService: BLOB WEBP CRIADO COM SUCESSO');
-                console.log('📊 webpConversionService: Tamanho final WebP:', Math.round(webpBlob.size / 1024), 'KB');
-                console.log('📊 webpConversionService: Tipo MIME final:', webpBlob.type);
+                console.log('✅ Blob WebP criado:', Math.round(webpBlob.size / 1024), 'KB');
                 resolve(webpBlob);
               } else {
-                console.error('❌ webpConversionService: FALHA AO CRIAR BLOB WEBP');
+                console.error('❌ Falha ao criar blob WebP');
                 reject(new Error('Failed to convert to WebP'));
               }
             },
@@ -314,20 +273,18 @@ class WebPConversionService {
             this.WEBP_QUALITY
           );
         } catch (error) {
-          console.error('❌ webpConversionService: ERRO DURANTE CONVERSÃO CANVAS');
-          console.error('❌ webpConversionService: Detalhes do erro:', error);
+          console.error('❌ Erro durante conversão Canvas:', error);
           reject(error);
         }
       };
 
       img.onerror = () => {
-        console.error('❌ webpConversionService: ERRO AO CARREGAR IMAGEM NO CANVAS');
-        console.error('❌ webpConversionService: URL que falhou no Canvas:', URL.createObjectURL(imageBlob));
+        console.error('❌ Erro ao carregar imagem no Canvas');
         reject(new Error('Failed to load image for conversion'));
       };
 
       // Load image from blob
-      console.log('🔄 webpConversionService: CARREGANDO BLOB NA IMAGEM PARA CANVAS');
+      console.log('🔄 Carregando blob na imagem para Canvas...');
       img.src = URL.createObjectURL(imageBlob);
     });
   }

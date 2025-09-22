@@ -17,6 +17,7 @@ import { ArrowLeft, RefreshCw, Trash2, Save, AlertTriangle } from "lucide-react"
 import { decodeHtmlEntities } from "@/lib/utils";
 import Footer from "@/components/Footer";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 
 interface GroupData {
   id: string;
@@ -310,22 +311,26 @@ const EditarGrupo = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
-                  {formData.profileImage ? (
-                    <img 
-                      src={formData.profileImage} 
+                  {formData.groupName ? (
+                    <IntelligentGroupImage
+                      telegramUrl={group?.telegramUrl}
+                      fallbackImageUrl={formData.profileImage}
+                      groupName={formData.groupName}
                       alt="Profile"
                       className="w-full h-full object-cover"
+                      priority={true}
+                      groupId={group?.id}
                     />
                   ) : (
                     <span className="text-primary-foreground font-bold">
-                      {formData.name.charAt(0).toUpperCase()}
+                      {formData.groupName.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div>
                   <div className="text-lg font-semibold">Editando Grupo</div>
                   <div className="text-sm text-muted-foreground font-normal">
-                    {group.name}
+                    {group?.name}
                   </div>
                 </div>
               </CardTitle>

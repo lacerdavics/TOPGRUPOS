@@ -57,6 +57,12 @@ service cloud.firestore {
     match /stats/{docId} {
       allow read: if true;
       allow write: if request.auth != null;
+      allow create, update: if request.auth == null 
+        && request.resource.data.keys().hasAll(['date', 'visits', 'timestamp'])
+        && request.resource.data.keys().hasOnly(['date', 'visits', 'timestamp', 'uniqueVisitors']);
+      allow create, update: if request.auth == null 
+        && request.resource.data.keys().hasAll(['date', 'visits', 'timestamp'])
+        && request.resource.data.keys().hasOnly(['date', 'visits', 'timestamp', 'uniqueVisitors']);
     }
 
     // ==============================
@@ -114,6 +120,13 @@ service cloud.firestore {
     match /visits/{visitId} {
       allow create: if true;
       allow read, update, delete: if false;
+    }
+
+    // ==============================
+    // ADMIN CONFIG
+    // ==============================
+    match /admin_config/{docId} {
+      allow read: if true;
     }
 
     // ==============================

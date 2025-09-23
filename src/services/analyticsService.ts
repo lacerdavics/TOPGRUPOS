@@ -3,10 +3,7 @@ import {
   addDoc, 
   doc,
   getDoc,
-  getDocs,
   query,
-  where,
-  orderBy,
   Timestamp,
   setDoc,
   increment,
@@ -41,10 +38,10 @@ export const trackVisit = async (route: string): Promise<void> => {
       userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "server"
     };
     
-    // Salva visita bruta
+    // ✅ Cria documento em /visits sem tentar ler (conforme regras)
     await addDoc(collection(db, "visits"), visitData);
     
-    // Atualiza contador diário (coleção "stats")
+    // ✅ Atualiza contador diário em /stats (regras permitem write nos campos abaixo)
     const today = new Date().toISOString().split("T")[0];
     const dailyRef = doc(db, "stats", today);
     
@@ -75,8 +72,11 @@ export const trackGroupView = async (groupId: string): Promise<void> => {
 };
 
 // ==============================
-// Get visits analytics (real or fake)
+// Get visits analytics
 // ==============================
+// ⚠️ As regras não permitem leitura em /visits,
+// portanto SEMPRE usamos dados fake se useRealAnalytics = false
+// e se forçado (forceReal=true) ainda pode dar permission-denied.
 export const getVisitsAnalytics = async (
   period: "24h" | "7d" | "30d" = "7d",
   forceReal: boolean = false
@@ -88,68 +88,9 @@ export const getVisitsAnalytics = async (
       return getFakeAnalyticsData(period);
     }
 
-    const now = new Date();
-    const startDate = new Date();
+    console.warn("⚠️ Leitura real de /visits não permitida pelas regras. Retornando dados fake.");
+    return getFakeAnalyticsData(period);
 
-    switch (period) {
-      case "24h":
-        startDate.setHours(now.getHours() - 24);
-        break;
-      case "7d":
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case "30d":
-        startDate.setDate(now.getDate() - 30);
-        break;
-    }
-
-    const q = query(
-      collection(db, "visits"),
-      where("timestamp", ">=", Timestamp.fromDate(startDate)),
-      orderBy("timestamp", "desc")
-    );
-
-    const querySnapshot = await getDocs(q);
-
-    const visits = querySnapshot.docs.map(docSnap => {
-      const data = docSnap.data() as any;
-      const ts = data.timestamp;
-      let tsDate: Date;
-
-      if (ts && typeof ts.toDate === "function") {
-        tsDate = ts.toDate();
-      } else if (ts instanceof Date) {
-        tsDate = ts;
-      } else {
-        tsDate = new Date(ts);
-      }
-
-      return {
-        id: docSnap.id,
-        ...data,
-        timestamp: tsDate
-      } as VisitData;
-    });
-
-    // Agrupa por data normalizada
-    const dailyVisits: { [key: string]: number } = {};
-    visits.forEach(visit => {
-      const date = visit.timestamp.toISOString().split("T")[0];
-      dailyVisits[date] = (dailyVisits[date] || 0) + 1;
-    });
-
-    const chartData = Object.entries(dailyVisits)
-      .map(([date, count]) => ({
-        date,
-        visits: count
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    return {
-      totalVisits: visits.length,
-      dailyData: chartData,
-      period
-    };
   } catch (error) {
     console.error("Error getting visits analytics:", error);
     return { totalVisits: 0, dailyData: [], period };

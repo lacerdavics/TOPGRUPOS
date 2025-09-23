@@ -44,6 +44,35 @@ const GroupCard = ({ group, onGroupUpdate, compact = false }: GroupCardProps) =>
   // AI-enhanced image
   const { enhancedSrc } = useGroupImageEnhancement(group.profileImage);
 
+  // Listen for image correction events
+  useEffect(() => {
+    const handleImageCorrection = (event: CustomEvent) => {
+      console.log('🔔 GroupCard: Evento de correção de imagem recebido:', event.detail);
+      
+      // Check if this event is for our group
+      if (event.detail.groupId === group.id) {
+        console.log(`✅ GroupCard: Imagem corrigida para grupo ${group.id} (${group.name})`);
+        console.log(`🆕 Nova URL: ${event.detail.newImageUrl}`);
+        console.log(`🗑️ URL antiga: ${event.detail.oldImageUrl}`);
+        
+        // Trigger parent component to refetch data from Firestore
+        if (onGroupUpdate) {
+          console.log('🔄 GroupCard: Solicitando atualização dos dados do grupo...');
+          onGroupUpdate();
+        } else {
+          console.log('⚠️ GroupCard: onGroupUpdate não fornecido, não é possível atualizar');
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    };
+  }, [group.id, group.name, onGroupUpdate]);
   const decodedName = decodeHtmlEntities(group.name);
   const sanitizedName = sanitizeGroupTitle(decodedName);
   const displayName = truncateTitle(sanitizedName, compact ? 20 : 30); // menor título se compacto

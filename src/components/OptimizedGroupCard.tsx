@@ -40,6 +40,35 @@ const OptimizedGroupCard = memo<OptimizedGroupCardProps>(({
   const { toast } = useToast();
   const { disableAnimations, isMobile } = useMobileOptimization();
 
+  // Listen for image correction events
+  useEffect(() => {
+    const handleImageCorrection = (event: CustomEvent) => {
+      console.log('🔔 OptimizedGroupCard: Evento de correção de imagem recebido:', event.detail);
+      
+      // Check if this event is for our group
+      if (event.detail.groupId === group.id) {
+        console.log(`✅ OptimizedGroupCard: Imagem corrigida para grupo ${group.id} (${group.name})`);
+        console.log(`🆕 Nova URL: ${event.detail.newImageUrl}`);
+        console.log(`🗑️ URL antiga: ${event.detail.oldImageUrl}`);
+        
+        // Trigger parent component to refetch data from Firestore
+        if (onGroupUpdate) {
+          console.log('🔄 OptimizedGroupCard: Solicitando atualização dos dados do grupo...');
+          onGroupUpdate();
+        } else {
+          console.log('⚠️ OptimizedGroupCard: onGroupUpdate não fornecido, não é possível atualizar');
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    };
+  }, [group.id, group.name, onGroupUpdate]);
   // Memoized calculations
   const decodedName = useMemo(() => decodeHtmlEntities(group.name), [group.name]);
   const sanitizedName = useMemo(() => sanitizeGroupTitle(decodedName), [decodedName]);

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Users, Tag, ArrowLeft } from "lucide-react";
 import { getCategoryById } from "@/data/categories";
-import LazyImage from "@/components/LazyImage";
 import CategoryIcon from "@/components/CategoryIcon";
 import { decodeHtmlEntities } from "@/lib/utils";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
+import SEOHead from "@/components/SEOHead";
 
 interface Group {
   id: string;
@@ -127,6 +127,15 @@ const GroupDetails = () => {
         structuredData={structuredData}
       />
       
+      <SEOHead
+        title={`${decodedName} | Grupo do Telegram | TopGrupos`}
+        description={decodedDescription}
+        url={`https://topgrupostele.com.br/grupo/${group.id}`}
+        canonical={`https://topgrupostele.com.br/grupo/${group.id}`}
+        robots="index, follow, max-image-preview:large"
+        structuredData={structuredData}
+      />
+      
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Back Button */}
@@ -146,7 +155,7 @@ const GroupDetails = () => {
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0">
                 {group.name ? (
                   <IntelligentGroupImage
-                    fallbackImageUrl={group.profileImage || group.imageUrl || group.profileImage}
+                    fallbackImageUrl={group.profileImage || group.imageUrl}
                     telegramUrl={group.telegramUrl}
                     groupName={decodedName}
                     alt={decodedName}

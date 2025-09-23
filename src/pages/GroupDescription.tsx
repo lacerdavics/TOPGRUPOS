@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import LazyImage from "@/components/LazyImage";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 import { ExternalLink, Eye, Flag, ArrowLeft, Trash2, Ban, RefreshCw } from "lucide-react";
 import Footer from "@/components/Footer";

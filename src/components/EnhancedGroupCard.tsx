@@ -45,6 +45,35 @@ const EnhancedGroupCard: React.FC<EnhancedGroupCardProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  // Listen for image correction events
+  useEffect(() => {
+    const handleImageCorrection = (event: CustomEvent) => {
+      console.log('🔔 EnhancedGroupCard: Evento de correção de imagem recebido:', event.detail);
+      
+      // Check if this event is for our group
+      if (event.detail.groupId === group.id) {
+        console.log(`✅ EnhancedGroupCard: Imagem corrigida para grupo ${group.id} (${group.name})`);
+        console.log(`🆕 Nova URL: ${event.detail.newImageUrl}`);
+        console.log(`🗑️ URL antiga: ${event.detail.oldImageUrl}`);
+        
+        // Trigger parent component to refetch data from Firestore
+        if (onGroupUpdate) {
+          console.log('🔄 EnhancedGroupCard: Solicitando atualização dos dados do grupo...');
+          onGroupUpdate();
+        } else {
+          console.log('⚠️ EnhancedGroupCard: onGroupUpdate não fornecido, não é possível atualizar');
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('groupImageCorrected', handleImageCorrection as EventListener);
+    };
+  }, [group.id, group.name, onGroupUpdate]);
   // Decode HTML entities and sanitize group name
   const decodedName = decodeHtmlEntities(group.name);
   const sanitizedName = sanitizeGroupTitle(decodedName);
@@ -69,7 +98,7 @@ const EnhancedGroupCard: React.FC<EnhancedGroupCardProps> = ({
         {/* Image Container */}
         <div className="relative aspect-square w-full overflow-hidden">
           <IntelligentGroupImage
-            fallbackImageUrl={(group as any).profileImage || group.imageUrl}
+            fallbackImageUrl={group.imageUrl || (group as any).profileImage}
             telegramUrl={group.telegramUrl}
             groupName={sanitizedName}
             alt={`Imagem do grupo ${sanitizedName}`}

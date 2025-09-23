@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Users, Tag } from "lucide-react";
 import { Group } from "./GroupCard";
 import { getCategoryById } from "@/data/categories";
-import LazyImage from "@/components/LazyImage";
 import CategoryIcon from "@/components/CategoryIcon";
 import { decodeHtmlEntities } from "@/lib/utils";
+import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 
 interface GroupModalProps {
   group: Group | null;

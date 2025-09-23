@@ -230,14 +230,16 @@ export function AppSidebar() {
                 <Plus className="w-5 h-5" />
                 <span className="text-xs font-semibold">Cadastrar Grupo</span>
               </Link>
-              <Link
-                to="/promover"
-                onClick={() => setOpenMobile(false)}
-                className={`${getCardCls(currentPath === "/promover")} flex items-center gap-2 p-2 rounded-xl`}
-              >
-                <span className="text-lg">🚀</span>
-                <span className="text-xs font-semibold">Promover Grupo</span>
-              </Link>
+              {currentUser && (
+                <Link
+                  to="/promover"
+                  onClick={() => setOpenMobile(false)}
+                  className={`${getCardCls(currentPath === "/promover")} flex items-center gap-2 p-2 rounded-xl`}
+                >
+                  <span className="text-lg">🚀</span>
+                  <span className="text-xs font-semibold">Promover Grupo</span>
+                </Link>
+              )}
 
               {currentUser ? (
                 <Link
@@ -346,13 +348,15 @@ export function AppSidebar() {
               <Plus className="w-5 h-5" />
               <span className="text-xs font-semibold">Cadastrar Grupo</span>
             </Link>
-            <Link
-              to="/promover"
-              className={`${getCardCls(currentPath === "/promover")} flex items-center gap-2 p-2 rounded-xl`}
-            >
-              <span className="text-lg">🚀</span>
-              <span className="text-xs font-semibold">Promover Grupo</span>
-            </Link>
+            {currentUser && (
+              <Link
+                to="/promover"
+                className={`${getCardCls(currentPath === "/promover")} flex items-center gap-2 p-2 rounded-xl`}
+              >
+                <span className="text-lg">🚀</span>
+                <span className="text-xs font-semibold">Promover Grupo</span>
+              </Link>
+            )}
 
             {currentUser ? (
               <Link

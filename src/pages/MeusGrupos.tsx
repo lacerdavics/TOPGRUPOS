@@ -169,6 +169,7 @@ const MeusGrupos = () => {
             loading={loading}
             onPromote={handlePromoteGroup}
             onEdit={handleEditGroup}
+            onGroupUpdate={() => fetchUserGroups(currentPage, false)}
           />
         </div>
 

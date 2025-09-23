@@ -45,22 +45,17 @@ const PaymentDisplay = ({
         setQrCode(result.qrCode);
         setPixCode(result.pixCode);
         onPaymentGenerated?.(result.qrCode, result.pixCode);
-        toast({
-          title: "QR Code gerado com sucesso!",
+        toast.success("QR Code gerado com sucesso!", {
           description: `Plano ${selectedPlan?.name} selecionado para o grupo "${selectedGroup.name}".`,
         });
       } else {
-        toast({
-          title: "Erro",
+        toast.error("Erro", {
           description: result.error || "Erro ao processar promoção. Tente novamente.",
-          variant: "destructive",
         });
       }
     } catch (error) {
-      toast({
-        title: "Erro",
+      toast.error("Erro", {
         description: "Erro ao gerar pagamento. Tente novamente.",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -71,15 +66,12 @@ const PaymentDisplay = ({
     if (pixCode) {
       try {
         await navigator.clipboard.writeText(pixCode);
-        toast({
-          title: "Código copiado!",
+        toast.success("Código copiado!", {
           description: "O código PIX foi copiado para a área de transferência.",
         });
       } catch (error) {
-        toast({
-          title: "Erro ao copiar",
+        toast.error("Erro ao copiar", {
           description: "Não foi possível copiar o código PIX. Tente novamente.",
-          variant: "destructive",
         });
       }
     }

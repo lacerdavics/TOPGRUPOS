@@ -15,9 +15,10 @@ interface UserGroupsGridProps {
   loading: boolean;
   onPromote: (groupId: string) => void;
   onEdit: (groupId: string) => void;
+  onGroupUpdate?: () => void;
 }
 
-const UserGroupsGrid = ({ groups, loading, onPromote, onEdit }: UserGroupsGridProps) => {
+const UserGroupsGrid = ({ groups, loading, onPromote, onEdit, onGroupUpdate }: UserGroupsGridProps) => {
   if (loading) {
     return (
       <div className="grid-responsive-cards">
@@ -63,6 +64,7 @@ const UserGroupsGrid = ({ groups, loading, onPromote, onEdit }: UserGroupsGridPr
           group={group}
           onPromote={onPromote}
           onEdit={onEdit}
+          onGroupUpdate={onGroupUpdate}
         />
       ))}
     </div>

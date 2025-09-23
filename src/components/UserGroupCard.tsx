@@ -1,4 +1,4 @@
-import { Edit, ExternalLink } from "lucide-react";
+import { Edit, ExternalLink, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
@@ -28,6 +28,9 @@ const UserGroupCard = ({ group, onPromote, onEdit }: UserGroupCardProps) => {
     navigate('/promover');
   };
 
+  const handleDeleteClick = () => {
+    navigate(`/grupo/${group.id}/apagar?name=${encodeURIComponent(group.name)}`);
+  };
   const decodedName = decodeHtmlEntities(group.name);
   const sanitizedName = sanitizeGroupTitle(decodedName);
 
@@ -85,6 +88,16 @@ const UserGroupCard = ({ group, onPromote, onEdit }: UserGroupCardProps) => {
         >
           <Edit className="w-3 h-3" />
           Editar
+        </Button>
+        
+        <Button
+          size="sm"
+          variant="destructive"
+          className="w-full gap-1 text-xs h-8"
+          onClick={handleDeleteClick}
+        >
+          <Trash2 className="w-3 h-3" />
+          Excluir
         </Button>
       </div>
     </div>

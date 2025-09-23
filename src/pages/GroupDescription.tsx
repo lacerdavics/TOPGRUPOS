@@ -78,7 +78,9 @@ const GroupDescription: React.FC = () => {
   const handleProceed = () => group && window.open(group.telegramUrl, '_blank');
   
   const handleDeleteClick = () => {
-    navigate(`/grupo/${group?.id}/apagar?name=${encodeURIComponent(group?.name || '')}`);
+    if (group?.id) {
+      navigate(`/grupo/${group.id}/apagar?name=${encodeURIComponent(group.name || '')}`);
+    }
   };
 
   const handleSuspendClick = () => {

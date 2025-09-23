@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trash2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { checkIsAdmin } from "@/services/userService";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import Footer from "@/components/Footer";
@@ -17,29 +17,66 @@ const DeleteGroup: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { currentUser } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [groupData, setGroupData] = useState<any>(null);
 
   const groupName = searchParams.get('name') || 'Grupo desconhecido';
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (currentUser?.uid) {
+    const checkPermissions = async () => {
+      if (!currentUser?.uid) {
+        navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+        return;
+      }
+
+      if (!groupId) {
+        toast.error("ID do grupo não encontrado.");
+        navigate('/');
+        return;
+      }
+
+      try {
+        // Check if user is admin
         const adminStatus = await checkIsAdmin(currentUser.uid);
         setIsAdmin(adminStatus);
-        
-        if (!adminStatus) {
-          toast.error("Acesso negado. Apenas administradores podem apagar grupos.");
-          navigate(-1);
+
+        // Get group data to check ownership
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+
+        if (!groupSnap.exists()) {
+          toast.error("Grupo não encontrado.");
+          navigate('/');
+          return;
         }
-      } else {
-        navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
+
+        const data = groupSnap.data();
+        setGroupData(data);
+
+        // Check if user can delete this group
+        const isOwner = data.userId === currentUser.uid || data.userEmail === currentUser.email;
+        const canUserDelete = adminStatus || isOwner;
+
+        if (!canUserDelete) {
+          toast.error("Acesso negado. Você só pode excluir grupos que você cadastrou ou ser administrador.");
+          navigate(-1);
+          return;
+        }
+
+        setCanDelete(true);
+      } catch (error) {
+        console.error("Erro ao verificar permissões:", error);
+        toast.error("Erro ao verificar permissões.");
+        navigate(-1);
+      } finally {
+        setIsCheckingAuth(false);
       }
-      setIsCheckingAuth(false);
     };
 
-    checkAdminStatus();
-  }, [currentUser?.uid, navigate]);
+    checkPermissions();
+  }, [currentUser?.uid, groupId, navigate]);
 
   const handleDeleteGroup = async () => {
     if (!groupId) return;
@@ -47,11 +84,20 @@ const DeleteGroup: React.FC = () => {
     setIsLoading(true);
     try {
       await deleteDoc(doc(db, "groups", groupId));
-      toast.success("Grupo apagado com sucesso!");
-      navigate('/');
+      
+      toast.success("Grupo excluído com sucesso!", {
+        description: "O grupo foi removido permanentemente da plataforma."
+      });
+      
+      // Redirect based on user type
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/meus-grupos');
+      }
     } catch (error) {
-      console.error(error);
-      toast.error("Erro ao apagar grupo. Tente novamente.");
+      console.error("Erro ao excluir grupo:", error);
+      toast.error("Erro ao excluir grupo. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -64,12 +110,15 @@ const DeleteGroup: React.FC = () => {
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (!canDelete) {
     return null;
   }
 
@@ -100,7 +149,7 @@ const DeleteGroup: React.FC = () => {
                   Confirmar Exclusão
                 </h1>
                 <p className="text-muted-foreground leading-relaxed">
-                  Tem certeza que deseja <strong className="text-red-600">apagar permanentemente</strong> o grupo:
+                  Tem certeza que deseja <strong className="text-red-600">excluir permanentemente</strong> o grupo:
                 </p>
               </div>
             </div>
@@ -110,6 +159,23 @@ const DeleteGroup: React.FC = () => {
               <p className="font-semibold text-center text-red-900 dark:text-red-100 break-words text-lg">
                 "{groupName}"
               </p>
+            </div>
+
+            {/* Informações sobre permissões */}
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  <p className="font-semibold mb-2">
+                    {isAdmin ? "🛡️ Você é administrador" : "👤 Você é o proprietário deste grupo"}
+                  </p>
+                  <p className="text-xs">
+                    {isAdmin 
+                      ? "Como administrador, você pode excluir qualquer grupo da plataforma."
+                      : "Como proprietário, você pode excluir apenas os grupos que você cadastrou."
+                    }
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Aviso importante */}
@@ -122,7 +188,10 @@ const DeleteGroup: React.FC = () => {
                     <li>• O grupo será removido permanentemente da plataforma</li>
                     <li>• Todos os dados relacionados serão perdidos</li>
                     <li>• Esta ação não pode ser desfeita</li>
-                    <li>• O usuário que cadastrou será notificado</li>
+                    <li>• O grupo não aparecerá mais nas buscas</li>
+                    {isAdmin && (
+                      <li>• O usuário que cadastrou será notificado da exclusão</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -146,12 +215,12 @@ const DeleteGroup: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Apagando...
+                    Excluindo...
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-5 h-5" />
-                    Apagar Grupo Permanentemente
+                    Excluir Grupo Permanentemente
                   </>
                 )}
               </Button>

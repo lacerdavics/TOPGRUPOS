@@ -16,7 +16,6 @@ import { db } from "@/lib/firebase";
 import { ArrowLeft, RefreshCw, Trash2, Save, AlertTriangle } from "lucide-react";
 import { decodeHtmlEntities } from "@/lib/utils";
 import Footer from "@/components/Footer";
-import { ConfirmationModal } from "@/components/ConfirmationModal";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 
 interface GroupData {
@@ -42,8 +41,6 @@ const EditarGrupo = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -227,30 +224,8 @@ const EditarGrupo = () => {
     }
   };
 
-  const deleteGroup = async () => {
-    if (!group || !groupId) return;
-
-    setDeleting(true);
-
-    try {
-      const groupRef = doc(db, "groups", groupId);
-      await deleteDoc(groupRef);
-
-      toast.success("✅ Grupo apagado!", {
-        description: "O grupo foi removido permanentemente da plataforma."
-      });
-
-      navigate('/meus-grupos');
-
-    } catch (error) {
-      console.error("Erro ao apagar grupo:", error);
-      toast.error("Erro ao apagar grupo", {
-        description: "Não foi possível apagar o grupo. Tente novamente."
-      });
-    } finally {
-      setDeleting(false);
-      setShowDeleteConfirm(false);
-    }
+  const handleDeleteClick = () => {
+    navigate(`/grupo/${groupId}/apagar?name=${encodeURIComponent(group?.name || '')}`);
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -311,11 +286,11 @@ const EditarGrupo = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
-                  {formData.groupName ? (
+                  {formData.name ? (
                     <IntelligentGroupImage
                       telegramUrl={group?.telegramUrl}
                       fallbackImageUrl={formData.profileImage}
-                      groupName={formData.groupName}
+                      groupName={formData.name}
                       alt="Profile"
                       className="w-full h-full object-cover"
                       priority={true}
@@ -323,7 +298,7 @@ const EditarGrupo = () => {
                     />
                   ) : (
                     <span className="text-primary-foreground font-bold">
-                      {formData.groupName.charAt(0).toUpperCase()}
+                      {formData.name.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
@@ -449,8 +424,7 @@ const EditarGrupo = () => {
 
                 <Button
                   variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={deleting}
+                  onClick={handleDeleteClick}
                   className="flex-1 sm:flex-initial"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -477,18 +451,6 @@ const EditarGrupo = () => {
           </Card>
         </div>
       </main>
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={deleteGroup}
-        title="Confirmar Exclusão"
-        description={`Tem certeza que deseja apagar permanentemente o grupo "${group?.name}"? Esta ação não pode ser desfeita e o grupo será removido da plataforma.`}
-        confirmText="Apagar Grupo"
-        cancelText="Cancelar"
-        isLoading={deleting}
-      />
 
 
       <Footer />

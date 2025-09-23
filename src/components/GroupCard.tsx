@@ -1,12 +1,21 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, MoreVertical, Trash2, Edit, Flag } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import IntelligentGroupImage from "@/components/IntelligentGroupImage";
 import { useMobileToast } from "@/hooks/useMobileToast";
 import { sanitizeGroupTitle, truncateTitle } from "@/utils/groupValidation";
 import { decodeHtmlEntities } from "@/lib/utils";
 import { useGroupImageEnhancement } from "@/hooks/useAIImageEnhancement";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { checkIsAdmin } from "@/services/userService";
 
 export interface Group {
   id: string;

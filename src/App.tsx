@@ -1,12 +1,11 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useResponsiveBreakpoints } from "@/hooks/useResponsiveBreakpoints";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -46,64 +45,51 @@ const AppContent = () => {
   const { isMobile, isTablet } = useResponsiveBreakpoints();
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        {/* Header para mobile e tablet */}
-        {(isMobile || isTablet) && (
-          <header className="fixed top-0 left-0 right-0 z-[60] h-16 flex items-center justify-between px-4 bg-background/95 backdrop-blur-sm border-b border-border/50">
-            <SidebarTrigger className="h-10 w-10 p-2 hover:bg-accent/50 rounded-lg transition-colors" />
-            <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              TopGrupos
-            </span>
-            <ThemeToggle />
-          </header>
-        )}
+    <div className="min-h-screen flex flex-col w-full bg-background">
+      <AppHeader />
+      
+      <main className="flex-1 pt-14 sm:pt-16">
+        <ScrollToTop />
+        <Routes>
+          {/* Páginas públicas */}
+          <Route path="/" element={<Index />} />
+          <Route path="/categoria/:categoryId" element={<Categoria />} />
+          <Route path="/busca" element={<Busca />} />
+          <Route path="/sobre" element={<Sobre />} />
+          <Route path="/contato" element={<Contato />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/confirmation" element={<Confirmation />} />
 
-        <AppSidebar />
+          {/* Rotas de grupos */}
+          <Route path="/cadastrar" element={<CadastrarGrupo />} />
+          <Route path="/editar-grupo/:groupId" element={<EditarGrupo />} />
+          <Route path="/grupo/:groupId" element={<GroupDetails />} />
+          <Route path="/grupo/:groupId/descricao" element={<GroupDescription />} />
+          <Route path="/grupo/:groupId/apagar" element={<DeleteGroup />} />
+          <Route path="/grupo/:groupId/suspender" element={<SuspendGroup />} />
+          <Route path="/grupo/:groupId/denunciar" element={<ReportGroup />} />
+          <Route path="/grupo/:groupId/recategorizar" element={<RecategorizeGroup />} />
+          <Route path="/report/:groupId" element={<Report />} />
+          <Route path="/promover" element={<Promover />} />
+          <Route path="/meus-grupos" element={<MeusGrupos />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/upload-banner" element={<UploadBanner />} />
 
-        <main className={`flex-1 ${(isMobile || isTablet) ? 'pt-16' : 'ml-60'}`}>
-          <ScrollToTop />
-          <Routes>
-            {/* Páginas públicas */}
-            <Route path="/" element={<Index />} />
-            <Route path="/categoria/:categoryId" element={<Categoria />} />
-            <Route path="/busca" element={<Busca />} />
-            <Route path="/sobre" element={<Sobre />} />
-            <Route path="/contato" element={<Contato />} />
-            <Route path="/termos" element={<Termos />} />
-            <Route path="/privacidade" element={<Privacidade />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/confirmation" element={<Confirmation />} />
+          {/* Blog */}
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
 
-            {/* Rotas de grupos */}
-            <Route path="/cadastrar" element={<CadastrarGrupo />} />
-            <Route path="/editar-grupo/:groupId" element={<EditarGrupo />} />
-            <Route path="/grupo/:groupId" element={<GroupDetails />} />
-            <Route path="/grupo/:groupId/descricao" element={<GroupDescription />} />
-            <Route path="/grupo/:groupId/apagar" element={<DeleteGroup />} />
-            <Route path="/grupo/:groupId/suspender" element={<SuspendGroup />} />
-            <Route path="/grupo/:groupId/denunciar" element={<ReportGroup />} />
-            <Route path="/grupo/:groupId/recategorizar" element={<RecategorizeGroup />} />
-            <Route path="/report/:groupId" element={<Report />} />
-            <Route path="/promover" element={<Promover />} />
-            <Route path="/meus-grupos" element={<MeusGrupos />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/upload-banner" element={<UploadBanner />} />
+          {/* Verificação de idade */}
+          <Route path="/verificacao-idade" element={<AgeVerification />} />
 
-            {/* Blog */}
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-
-            {/* Verificação de idade */}
-            <Route path="/verificacao-idade" element={<AgeVerification />} />
-
-            {/* Fallback */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-      </div>
-    </SidebarProvider>
+          {/* Fallback */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </div>
   );
 };
 

@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { memo, useMemo } from "react";
+import { categories } from "@/data/categories";
+import CategoryIcon from "@/components/CategoryIcon";
+import { requiresAgeVerification, isAgeVerified } from "@/utils/ageVerification";
 import SEOHead from "@/components/SEOHead";
 import { useOptimizedPopularGroups } from "@/hooks/useOptimizedPopularGroups";
 import { useOptimizedGroupsExcluding } from "@/hooks/useOptimizedPopularGroups";
 import { useUltraFastGroups } from "@/hooks/useUltraFastGroups";
-import { filterAdultGroups, isAgeVerified } from "@/utils/ageVerification";
+import { filterAdultGroups } from "@/utils/ageVerification";
 import GroupCard from "@/components/GroupCard";
 import usePageAnalytics from "@/hooks/usePageAnalytics";
 import { Pagination } from "@/components/Pagination"
@@ -294,6 +297,52 @@ const Index = memo(() => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-8 bg-gradient-to-b from-background to-muted/10">
+        <div className="container-fluid">
+          <div className="text-center mb-8 space-y-4">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold font-heading flex items-center justify-center gap-3">
+              📂 Explore por <span className="text-transparent bg-gradient-to-r from-primary to-accent bg-clip-text">Categoria</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Encontre grupos organizados por seus interesses e hobbies
+            </p>
+          </div>
+
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  to={
+                    requiresAgeVerification(category.id) && !isAgeVerified()
+                      ? `/verificacao-idade?redirect=${encodeURIComponent(`/categoria/${category.id}`)}`
+                      : `/categoria/${category.id}`
+                  }
+                  className="group"
+                >
+                  <div className="bg-card rounded-2xl p-4 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <CategoryIcon
+                        iconData={category.icon}
+                        size={24}
+                        color="white"
+                      />
+                    </div>
+                    <h3 className="text-sm font-semibold text-center group-hover:text-primary transition-colors">
+                      {category.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground text-center mt-1 line-clamp-2">
+                      {category.description}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>

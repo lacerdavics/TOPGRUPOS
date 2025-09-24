@@ -106,6 +106,7 @@ const Promover = () => {
         robots="index, follow, max-image-preview:large"
       />
       
+      <div>
       {/* Hero Section */}
       <section className="relative py-12 md:py-20 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-success/10 opacity-50"></div>
@@ -263,6 +264,7 @@ const Promover = () => {
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 };

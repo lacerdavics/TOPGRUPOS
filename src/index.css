@@ -448,56 +448,120 @@ All colors MUST be HSL.
     text-align: start;
   }
 
-  /* Mobile Performance Optimizations - Disable ALL animations and transitions */
-  @media (max-width: 767px) {
-    /* AGGRESSIVE: Disable ALL animations, transitions, and effects on mobile */
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      transition-delay: 0ms !important;
-      scroll-behavior: auto !important;
-      transform: none !important;
-      filter: none !important;
-      backdrop-filter: none !important;
-      box-shadow: none !important;
-      text-shadow: none !important;
-      will-change: auto !important;
-      contain: layout style !important;
-    }
-    
-    /* Optimize scrolling performance */
-    body {
-      -webkit-overflow-scrolling: touch;
-      overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      /* Remove GPU acceleration for better performance on low-end devices */
-      -webkit-backface-visibility: visible;
-      backface-visibility: visible;
-      -webkit-transform: none;
-      transform: none;
-    }
-    
-    /* Remove ALL hover effects */
-    .card-modern:hover,
-    .btn-modern:hover,
-    .btn-accent:hover,
-    .btn-outline-modern:hover,
-    .btn-soft:hover,
-    .hover-scale:hover,
-    .hover-lift:hover,
-    .card-category:hover,
-    .card-group:hover,
-    .card-premium:hover {
-      transform: none !important;
-      box-shadow: inherit !important;
-      scale: none !important;
-      animation: none !important;
+/* Mobile Performance Optimizations - Minimal */
+@media (max-width: 767px) {
+  /* Apenas desativar animações MUITO longas */
+  * {
+    animation-duration: 0.3s !important;
+    transition-duration: 0.3s !important;
+  }
+  
+  /* Garantir que toasts funcionem */
+  .toast, [data-toast] {
+    backdrop-filter: blur(10px) !important;
+  }
+  
+  /* NÃO mexer em overlays/sidebar - deixar como está */
+
+  
+  /* Simplify card shadows - keep minimal for depth */
+  .card-modern {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+  }
+  
+  /* Remove gradient backgrounds for better performance */
+  .hero-gradient,
+  .gradient-primary,
+  .gradient-accent,
+  .card-premium {
+    background: hsl(var(--card)) !important;
+  }
+  
+  /* Optimize text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    text-rendering: optimizeSpeed;
+    font-display: swap;
+  }
+  
+  /* Disable floating and pulsing animations */
+  .animate-floating,
+  .animate-pulse-glow,
+  .animate-bounce-subtle,
+  .animate-wiggle,
+  .animate-gradient-shift {
+    animation: none !important;
+  }
+  
+  /* Remove complex borders and effects */
+  .card-premium::before {
+    display: none !important;
+  }
+  
+  /* Simplify badges */
+  .badge-modern,
+  .badge-accent {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+  /* Ultra low-end device optimizations - Maximum performance mode */
+  @media (max-width: 480px) {
+    /* EXTREME: Remove everything non-essential for ultra-light performance */
+    * {
       transition: none !important;
+      animation: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      filter: none !important;
+      border-radius: 8px !important; /* Simplified borders */
+      text-shadow: none !important;
+      transform: none !important;
     }
     
+    /* Ultra minimal shadows only where absolutely necessary */
+    .card-modern,
+    .card-category,
+    .card-group {
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+      border-radius: 12px !important;
+    }
+    
+    /* Remove ALL gradients and use solid colors */
+    .hero-gradient,
+    .gradient-primary,
+    .gradient-accent,
+    .btn-modern,
+    .btn-accent,
+    .card-premium {
+      background: hsl(var(--card)) !important;
+      background-image: none !important;
+    }
+    
+    /* Simplify buttons to basic styles */
+    .btn-modern {
+      background: hsl(var(--primary)) !important;
+      color: hsl(var(--primary-foreground)) !important;
+    }
+    
+    .btn-accent {
+      background: hsl(var(--accent)) !important;
+      color: hsl(var(--accent-foreground)) !important;
+    }
+    
+    /* Remove all special effects */
+    .badge-modern,
+    .badge-accent,
+    .card-premium::before {
+      background: hsl(var(--muted)) !important;
+      border: 1px solid hsl(var(--border)) !important;
+    }
+    
+    /* Ultra fast scroll behavior */
+    html {
+      scroll-behavior: auto !important;
+    }
+      
     /* Simplify card shadows - keep minimal for depth */
     .card-modern {
       box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
@@ -1860,5 +1924,68 @@ All colors MUST be HSL.
   .dark .container-fluid .card-group {
     background: hsl(var(--card)) !important;
     border-color: hsl(var(--border)) !important;
+  }
+
+  /* ========== CORREÇÃO PARA CAIXA DE FILTROS ========== */
+  
+  /* Estilo base para dropdowns/filtros */
+  .filter-dropdown {
+    @apply bg-card border border-border rounded-lg shadow-sm;
+    @apply transition-all duration-200 ease-out;
+    @apply z-50; /* Garante que fique acima de outros elementos */
+  }
+  
+  .filter-dropdown:focus-within {
+    @apply border-primary ring-2 ring-primary/20;
+  }
+  
+  /* Itens da lista de filtros */
+  .filter-item {
+    @apply px-3 py-2 text-sm cursor-pointer;
+    @apply transition-colors duration-150;
+    @apply hover:bg-muted hover:text-foreground;
+  }
+  
+  .filter-item.selected {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  /* Overlay do dropdown */
+  .filter-overlay {
+    @apply fixed inset-0 z-40 bg-black/10;
+    @apply backdrop-blur-sm;
+  }
+  
+  /* Container do dropdown */
+  .filter-content {
+    @apply absolute top-full left-0 right-0 mt-1;
+    @apply bg-card border border-border rounded-lg shadow-lg;
+    @apply max-h-60 overflow-y-auto;
+    @apply animate-in fade-in-0 zoom-in-95;
+  }
+  
+  /* Mobile optimizations para filtros */
+  @media (max-width: 768px) {
+    .filter-content {
+      @apply fixed inset-x-4 top-auto bottom-4 max-h-64;
+      @apply animate-in slide-in-from-bottom-5;
+    }
+    
+    .filter-overlay {
+      @apply bg-black/30;
+    }
+  }
+  
+  /* Correção específica para selects nativos */
+  select.filter-select {
+    @apply w-full bg-background border border-input rounded-md;
+    @apply px-3 py-2 text-sm focus:outline-none focus:ring-2;
+    @apply focus:ring-primary focus:border-primary;
+    @apply cursor-pointer;
+  }
+  
+  /* Estado aberto/fechado */
+  .filter-open {
+    @apply border-primary shadow-md;
   }
 }
